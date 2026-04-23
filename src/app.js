@@ -105,6 +105,12 @@ function createState(data) {
       headerCollapsed: true,
       directorCollapsed: true,
       scriptPanelOpen: false,
+      overviewTransportLayers: {
+        airportBus: true,
+        taxi: true,
+        rideHailing: true,
+        privateCar: true,
+      },
     },
     demo: {
       playing: false,

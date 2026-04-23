@@ -35,6 +35,46 @@ function roadTone(level) {
   }[level] ?? 'road--medium';
 }
 
+const OVERVIEW_TRANSPORT_LAYERS = [
+  {
+    id: 'airportBus',
+    label: '机场巴士',
+    tone: 'bus',
+    streams: [
+      { roadId: 'airport-loop', count: 2, speed: 1.3, radius: 5.6, offset: 0.15 },
+      { roadId: 'dispatch-link', count: 2, speed: 1.2, radius: 5.2, offset: 0.55 },
+    ],
+  },
+  {
+    id: 'taxi',
+    label: '出租车',
+    tone: 'taxi',
+    streams: [
+      { roadId: 'arrival-lane', count: 3, speed: 1.6, radius: 4.8, offset: 0.12 },
+      { roadId: 'dispatch-link', count: 2, speed: 1.45, radius: 4.2, offset: 0.48 },
+    ],
+  },
+  {
+    id: 'rideHailing',
+    label: '网约车',
+    tone: 'ride',
+    streams: [
+      { roadId: 'arrival-lane', count: 3, speed: 1.5, radius: 4.6, offset: 0.26 },
+      { roadId: 'parking-link', count: 2, speed: 1.35, radius: 4.2, offset: 0.64 },
+    ],
+  },
+  {
+    id: 'privateCar',
+    label: '私家车',
+    tone: 'private',
+    streams: [
+      { roadId: 'departure-lane', count: 4, speed: 1.9, radius: 4.2, offset: 0.08 },
+      { roadId: 'airport-loop', count: 3, speed: 1.8, radius: 4, offset: 0.36 },
+      { roadId: 'arrival-lane', count: 2, speed: 1.55, radius: 4, offset: 0.72 },
+    ],
+  },
+];
+
 export function renderMapScene({
   mapAssets,
   alerts = [],
@@ -46,10 +86,12 @@ export function renderMapScene({
   emergencyScenario,
   emergencyProgress = 0,
   trafficScenario,
+  transportLayers = null,
 }) {
   const roadLevels = new Map(
     (trafficScenario?.roadLoads ?? []).map((item) => [item.roadId, item.level]),
   );
+  const transportLayerState = normalizeTransportLayers(transportLayers);
   const focusRegion = mapAssets.regions.find((region) => region.id === focusRegionId) ?? null;
   const focusView = focusRegion
     ? buildFocusViewBox(focusRegion, mapAssets.viewport)
@@ -67,6 +109,30 @@ export function renderMapScene({
         <span class="scene-hud__tag">${sceneTag(mode)}</span>
         <span class="scene-hud__legend">统一底座 / GIS 叠加 / 状态仿真</span>
       </div>
+      ${
+        mode === 'overview'
+          ? `
+            <div class="scene-overlay-controls">
+              <span class="scene-overlay-controls__label">交通图层</span>
+              <div class="layer-strip scene-layer-strip">
+                ${OVERVIEW_TRANSPORT_LAYERS.map(
+                  (layer) => `
+                    <button
+                      class="layer-pill ${transportLayerState[layer.id] ? 'is-active' : ''}"
+                      type="button"
+                      data-transport-layer="${layer.id}"
+                      aria-pressed="${transportLayerState[layer.id]}"
+                    >
+                      <span class="layer-pill__dot layer-pill__dot--${layer.tone}"></span>
+                      ${layer.label}
+                    </button>
+                  `,
+                ).join('')}
+              </div>
+            </div>
+          `
+          : ''
+      }
       <div class="scene-focus-mask"></div>
       <svg
         class="airport-scene airport-scene--${mode}"
@@ -125,6 +191,7 @@ export function renderMapScene({
         ${trafficScenario ? renderTrafficFacilities(trafficScenario) : ''}
         ${trafficScenario ? renderTrafficNodes(trafficScenario) : ''}
         ${trafficScenario ? renderTrafficVehicles(trafficScenario, mapAssets) : ''}
+        ${mode === 'overview' ? renderOverviewTransportVehicles(mapAssets, transportLayerState) : ''}
 
         ${videos
           .map(
@@ -235,6 +302,43 @@ function renderTrafficVehicles(trafficScenario, mapAssets) {
       );
     })
     .join('');
+}
+
+function normalizeTransportLayers(transportLayers) {
+  return {
+    airportBus: transportLayers?.airportBus ?? true,
+    taxi: transportLayers?.taxi ?? true,
+    rideHailing: transportLayers?.rideHailing ?? true,
+    privateCar: transportLayers?.privateCar ?? true,
+  };
+}
+
+function renderOverviewTransportVehicles(mapAssets, transportLayerState) {
+  return OVERVIEW_TRANSPORT_LAYERS.flatMap((layer) => {
+    if (!transportLayerState[layer.id]) {
+      return [];
+    }
+
+    return layer.streams.flatMap((stream) => {
+      const road = mapAssets.roads.find((item) => item.id === stream.roadId);
+      if (!road) {
+        return [];
+      }
+
+      return Array.from({ length: stream.count }).map(
+        (_, index) => `
+          <circle class="scene-vehicle scene-vehicle--overview scene-vehicle--${layer.tone}" r="${stream.radius}">
+            <animateMotion
+              dur="${Math.max(2.8, 7.8 - stream.speed * 1.55)}s"
+              begin="${(stream.offset + index * 0.68).toFixed(2)}s"
+              repeatCount="indefinite"
+              path="${road.path}"
+            />
+          </circle>
+        `,
+      );
+    });
+  }).join('');
 }
 
 function buildFocusViewBox(region, viewport) {

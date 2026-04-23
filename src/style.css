@@ -1359,6 +1359,11 @@ button {
   filter: drop-shadow(0 0 6px rgba(82, 212, 255, 0.35));
 }
 
+.scene-vehicle--overview {
+  opacity: 0.94;
+  filter: drop-shadow(0 0 8px rgba(82, 212, 255, 0.32));
+}
+
 .scene-vehicle--hot {
   fill: rgba(255, 123, 123, 0.9);
 }
@@ -1373,6 +1378,22 @@ button {
 
 .scene-vehicle--accent {
   fill: rgba(159, 245, 255, 0.92);
+}
+
+.scene-vehicle--bus {
+  fill: rgba(124, 233, 198, 0.92);
+}
+
+.scene-vehicle--taxi {
+  fill: rgba(255, 205, 87, 0.94);
+}
+
+.scene-vehicle--ride {
+  fill: rgba(91, 219, 255, 0.94);
+}
+
+.scene-vehicle--private {
+  fill: rgba(255, 150, 150, 0.92);
 }
 
 .video-preview__meta,
@@ -1631,6 +1652,32 @@ button {
   border: 1px solid rgba(124, 201, 255, 0.12);
 }
 
+.scene-overlay-controls {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  z-index: 2;
+  display: grid;
+  gap: 10px;
+  justify-items: end;
+  max-width: min(58%, 520px);
+}
+
+.scene-overlay-controls__label {
+  padding: 7px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(124, 201, 255, 0.12);
+  background: rgba(3, 12, 28, 0.72);
+  color: var(--text-soft);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+}
+
+.scene-layer-strip {
+  justify-content: flex-end;
+  margin-bottom: 0;
+}
+
 .layer-strip {
   display: flex;
   flex-wrap: wrap;
@@ -1641,18 +1688,43 @@ button {
 .layer-pill {
   display: inline-flex;
   align-items: center;
+  gap: 8px;
   padding: 8px 12px;
   border-radius: 999px;
   border: 1px solid rgba(124, 201, 255, 0.12);
   background: rgba(8, 21, 42, 0.5);
   color: var(--text-soft);
   font-size: 0.8rem;
+  cursor: pointer;
 }
 
 .layer-pill.is-active {
   color: #f3fdff;
   background: rgba(31, 216, 242, 0.14);
   border-color: rgba(135, 231, 255, 0.24);
+}
+
+.layer-pill__dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.04);
+}
+
+.layer-pill__dot--bus {
+  background: rgba(124, 233, 198, 0.95);
+}
+
+.layer-pill__dot--taxi {
+  background: rgba(255, 205, 87, 0.95);
+}
+
+.layer-pill__dot--ride {
+  background: rgba(91, 219, 255, 0.95);
+}
+
+.layer-pill__dot--private {
+  background: rgba(255, 150, 150, 0.95);
 }
 
 .scene-hud__tag {

@@ -22,8 +22,6 @@ export function renderOverviewPage({ data, route, state, navigate }) {
   const terminalContext =
     activeTerminal && activeFloor ? resolveTerminalContext(activeFloor, route) : null;
   const sceneAlert = terminalContext?.activeAlert ?? airportAlert;
-  const sceneVideo = terminalContext?.activeVideo ?? airportVideo;
-  const sceneFocus = terminalContext?.activeZone ?? focusRegion;
   const searchPool = activeTerminal && activeFloor ? buildTerminalSearchPool(activeFloor) : [];
   const searchPlaceholder = activeTerminal
     ? '搜索楼层分区、视频、资源或处置要点'
@@ -44,6 +42,7 @@ export function renderOverviewPage({ data, route, state, navigate }) {
           focusRegionId: focusRegion.id,
           activeAlertId: airportAlert.id,
           activeVideoId: airportVideo.id,
+          transportLayers: state.ui.overviewTransportLayers,
         });
 
   state.selection.alertId = airportAlert.id;
@@ -88,27 +87,33 @@ export function renderOverviewPage({ data, route, state, navigate }) {
               })}
             </section>
 
-            <section class="panel reveal js-terminal-focus-panel" style="animation-delay: 120ms;">
-              <div class="panel-heading">
-                <span class="panel-kicker">${activeTerminal ? '楼内焦点' : '当前焦点'}</span>
-                <h3>${activeTerminal ? `${activeTerminal.name} ${activeFloor.name}` : sceneFocus.name}</h3>
-              </div>
-              <div class="js-terminal-focus-body">
-                <p class="panel-copy">${activeTerminal ? activeFloor.subtitle : sceneFocus.description}</p>
-                <div class="focus-summary">
-                  <span><strong>${activeTerminal ? sceneAlert.title : airportAlert.title}</strong></span>
-                  <span class="tone tone--${getAlertTone(sceneAlert.level)}">${sceneAlert.status}</span>
-                </div>
-              </div>
-              <div class="panel-actions">
-                <button class="action-button" type="button" data-jump-emergency="${sceneAlert.scenarioId ?? airportAlert.scenarioId}" data-alert-id="${airportAlert.id}">
-                  进入应急推演
-                </button>
-                <button class="action-button action-button--ghost" type="button" data-jump-traffic="${focusRegion.id}">
-                  进入交通仿真
-                </button>
-              </div>
-            </section>
+            ${
+              activeTerminal
+                ? `
+                  <section class="panel reveal js-terminal-focus-panel" style="animation-delay: 120ms;">
+                    <div class="panel-heading">
+                      <span class="panel-kicker">楼内焦点</span>
+                      <h3>${activeTerminal.name} ${activeFloor.name}</h3>
+                    </div>
+                    <div class="js-terminal-focus-body">
+                      <p class="panel-copy">${activeFloor.subtitle}</p>
+                      <div class="focus-summary">
+                        <span><strong>${sceneAlert.title}</strong></span>
+                        <span class="tone tone--${getAlertTone(sceneAlert.level)}">${sceneAlert.status}</span>
+                      </div>
+                    </div>
+                    <div class="panel-actions">
+                      <button class="action-button" type="button" data-jump-emergency="${sceneAlert.scenarioId ?? airportAlert.scenarioId}" data-alert-id="${airportAlert.id}">
+                        进入应急推演
+                      </button>
+                      <button class="action-button action-button--ghost" type="button" data-jump-traffic="${focusRegion.id}">
+                        进入交通仿真
+                      </button>
+                    </div>
+                  </section>
+                `
+                : ''
+            }
           </aside>
 
           <section class="panel panel--map reveal" style="animation-delay: 60ms;">
@@ -129,7 +134,7 @@ export function renderOverviewPage({ data, route, state, navigate }) {
             ${
               activeTerminal && activeFloor
                 ? renderBalancedTerminalRightRail(activeFloor, terminalContext)
-                : renderBalancedAirportRightRail(data, airportAlert, airportVideo, focusRegion)
+                : renderBalancedAirportRightRail(data, airportAlert, focusRegion)
             }
           </aside>
         </div>
@@ -297,15 +302,9 @@ function renderOverviewAssurancePanel({
             <article class="linkage-card">
               <span>${item.label}</span>
               <strong>${item.value}</strong>
-              <small>${item.detail}</small>
             </article>
           `,
         )
-        .join('')}
-    </div>
-    <div class="linkage-tags">
-      ${overviewSummary.tags
-        .map((tag) => `<span class="resource-chip ${tag.active ? 'is-active' : ''}">${tag.label}</span>`)
         .join('')}
     </div>
   `;
@@ -357,7 +356,7 @@ function buildOverviewAssuranceItems({
       {
         label: '处置中预警',
         value: `${activeAlerts.length} 条`,
-        detail: `当前焦点：${focusedLabel}，最新关联事件为“${airportAlert.title}”。`,
+        detail: `重点关注：${focusedLabel}，最新关联事件为“${airportAlert.title}”。`,
       },
       {
         label: '当前联动视频',
@@ -399,7 +398,6 @@ function renderAreaLoadPanel(data, focusRegion) {
                   <span>${item.name}</span>
                   <strong>${item.value}%</strong>
                 </div>
-                <small>${region?.description ?? '当前重点区域运行状态联动展示'}</small>
               </button>
             `;
           })
@@ -611,7 +609,7 @@ function renderTerminalRightRail(activeFloor, terminalContext, searchPool, searc
   `;
 }
 
-function renderBalancedAirportRightRail(data, activeAlert, activeVideo, focusRegion) {
+function renderBalancedAirportRightRail(data, activeAlert, focusRegion) {
   return `
     <section class="panel reveal" style="animation-delay: 100ms;">
       <div class="panel-heading">
@@ -640,31 +638,25 @@ function renderBalancedAirportRightRail(data, activeAlert, activeVideo, focusReg
 
     <section class="panel reveal" style="animation-delay: 140ms;">
       <div class="panel-heading">
-        <span class="panel-kicker">视频资源</span>
-        <h3>${activeVideo.name}</h3>
+        <span class="panel-kicker">重点关注</span>
+        <h3>${focusRegion.name}</h3>
       </div>
-      <div class="video-preview">
-        <div class="video-preview__noise"></div>
-        <div class="video-preview__hud">
-          <span>实时画面</span>
-          <strong>${activeVideo.streamPreview}</strong>
-        </div>
+      <div class="focus-summary">
+        <span><strong>${activeAlert.title}</strong></span>
+        <span class="tone tone--${getAlertTone(activeAlert.level)}">${activeAlert.status}</span>
       </div>
-      <div class="video-list">
-        ${data.videos
-          .map(
-            (video) => `
-              <button
-                class="resource-chip ${video.id === activeVideo.id ? 'is-active' : ''}"
-                type="button"
-                data-select-video="${video.id}"
-                data-select-video-scope="airport"
-              >
-                ${video.name}
-              </button>
-            `,
-          )
-          .join('')}
+      <div class="panel-actions">
+        <button
+          class="action-button"
+          type="button"
+          data-jump-emergency="${activeAlert.scenarioId}"
+          data-alert-id="${activeAlert.id}"
+        >
+          进入应急推演
+        </button>
+        <button class="action-button action-button--ghost" type="button" data-jump-traffic="${focusRegion.id}">
+          进入交通仿真
+        </button>
       </div>
     </section>
 
@@ -754,6 +746,7 @@ function setupOverviewPage({
 }) {
   const rightRail = container.querySelector('.js-overview-right-rail');
   const resourceLinkagePanel = container.querySelector('.js-resource-linkage-panel');
+  const sceneSlot = container.querySelector('.js-terminal-scene-slot');
   const footerPanel = container.querySelector('.panel--footer');
   const overviewPage = container.querySelector('.page--overview');
   const overviewGrid = container.querySelector('.page-grid--overview');
@@ -813,6 +806,43 @@ function setupOverviewPage({
 
   const searchResults = container.querySelector('.js-search-results');
   const searchInput = container.querySelector('.search-box__input');
+  const renderAirportScene = () => {
+    if (!sceneSlot) {
+      return;
+    }
+
+    sceneSlot.innerHTML = renderMapScene({
+      mapAssets: data.mapAssets,
+      alerts: data.alerts,
+      videos: data.videos,
+      mode: 'overview',
+      focusRegionId: focusRegion.id,
+      activeAlertId: airportAlert.id,
+      activeVideoId: airportVideo.id,
+      transportLayers: state.ui.overviewTransportLayers,
+    });
+
+    bindSceneLinks(sceneSlot, data, navigate, {
+      airportAlert,
+      airportVideo,
+      focusRegion,
+      activeTerminal,
+      activeFloor,
+      terminalContext,
+    });
+
+    sceneSlot.querySelectorAll('[data-transport-layer]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const layerId = button.dataset.transportLayer;
+        if (!layerId) {
+          return;
+        }
+
+        state.ui.overviewTransportLayers[layerId] = !state.ui.overviewTransportLayers[layerId];
+        renderAirportScene();
+      });
+    });
+  };
 
   container.querySelectorAll('[data-select-alert]').forEach((button) => {
     button.addEventListener('click', () => {
@@ -1015,6 +1045,7 @@ function setupOverviewPage({
     activeFloor,
     terminalContext,
   });
+  renderAirportScene();
 
   container.querySelectorAll('[data-terminal-floor]').forEach((button) => {
     button.addEventListener('click', () => {
