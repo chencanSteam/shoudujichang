@@ -1,0 +1,241 @@
+[
+  {
+    "id": "baseline-dispatch",
+    "name": "常规交通场景",
+    "description": "维持当前公共区交通组织方式，持续监看楼前道路、停车回流与接驳节点状态。",
+    "regionId": "arrival-curb",
+    "timeWindow": "14:00 - 17:00",
+    "dispatchRule": "按现行节拍组织接驳与补位",
+    "parkingStrategy": "临停优先、停车回流跟随调整",
+    "timeSlots": [
+      { "id": "arrival-peak", "label": "到港高峰", "impact": 1.06 },
+      { "id": "mixed-window", "label": "混合波段", "impact": 1.0 },
+      { "id": "departure-peak", "label": "离港高峰", "impact": 1.1 }
+    ],
+    "flightOptions": [
+      { "id": "regular-wave", "label": "常规波峰", "penalty": 0.0 },
+      { "id": "peak-stack", "label": "高峰叠加", "penalty": 0.04 },
+      { "id": "delay-stack", "label": "延误叠加", "penalty": 0.08 }
+    ],
+    "weatherOptions": [
+      { "id": "clear", "label": "晴间多云", "penalty": 0.0 },
+      { "id": "crosswind", "label": "短时侧风", "penalty": 0.06 },
+      { "id": "drizzle", "label": "小雨", "penalty": 0.04 }
+    ],
+    "businessOptions": [
+      { "id": "normal", "label": "常态保障", "boost": 0.0 },
+      { "id": "focused", "label": "重点保障", "boost": 0.025 },
+      { "id": "emergency", "label": "应急保障", "boost": 0.05 }
+    ],
+    "controlDefaults": {
+      "taxiReserve": 58,
+      "shuttleDispatch": 52,
+      "rideFence": 44,
+      "roadRelease": 48,
+      "parkingGuide": 46
+    },
+    "metrics": [
+      { "label": "平均停留时间", "value": 18.6, "unit": "分钟" },
+      { "label": "停车场使用效率", "value": 82, "unit": "%" },
+      { "label": "车辆平均数量", "value": 468, "unit": "辆" },
+      { "label": "道路拥堵指数", "value": 1.96, "unit": "" },
+      { "label": "方案评分", "value": 72, "unit": "分" }
+    ],
+    "roadLoads": [
+      { "roadId": "departure-lane", "level": "medium" },
+      { "roadId": "arrival-lane", "level": "high" },
+      { "roadId": "parking-link", "level": "high" },
+      { "roadId": "dispatch-link", "level": "medium" },
+      { "roadId": "airport-loop", "level": "medium" }
+    ],
+    "trafficNodes": [
+      {
+        "id": "node-arrival",
+        "label": "到达接驳口",
+        "x": 518,
+        "y": 452,
+        "type": "node",
+        "status": "高压运行",
+        "detail": "楼前接驳带车流持续高位，社会车辆与网约车短停叠加。"
+      },
+      {
+        "id": "node-taxi",
+        "label": "出租车补位口",
+        "x": 228,
+        "y": 338,
+        "type": "dispatch",
+        "status": "常规补位",
+        "detail": "补位车辆按常规节拍进入楼前补位区。"
+      },
+      {
+        "id": "node-p2",
+        "label": "P2 回流口",
+        "x": 858,
+        "y": 392,
+        "type": "parking",
+        "status": "回流偏慢",
+        "detail": "停车回流与网约车回转叠加，影响回流效率。"
+      },
+      {
+        "id": "node-bus",
+        "label": "巴士集散口",
+        "x": 786,
+        "y": 512,
+        "type": "hub",
+        "status": "排班稳定",
+        "detail": "机场巴士与摆渡运力维持常规班次。"
+      }
+    ],
+    "facilityPoints": [
+      { "id": "facility-guide", "label": "导向屏组", "x": 472, "y": 286, "type": "facility" },
+      { "id": "facility-barrier", "label": "电子围栏", "x": 302, "y": 478, "type": "facility" },
+      { "id": "facility-bay", "label": "临时上客湾", "x": 732, "y": 444, "type": "facility" }
+    ],
+    "vehicleStreams": [
+      { "roadId": "arrival-lane", "count": 4, "tone": "hot", "speed": 1.2 },
+      { "roadId": "departure-lane", "count": 3, "tone": "warm", "speed": 1.5 },
+      { "roadId": "parking-link", "count": 3, "tone": "cool", "speed": 1.1 },
+      { "roadId": "dispatch-link", "count": 2, "tone": "cool", "speed": 1.6 }
+    ],
+    "roadNotes": [
+      {
+        "roadId": "arrival-lane",
+        "label": "到达层主车道",
+        "detail": "社会车辆、出租车与网约车共同承压。",
+        "kpi": "平均通过 2.8 分钟"
+      },
+      {
+        "roadId": "parking-link",
+        "label": "停车接驳路",
+        "detail": "P2 回流与临停车辆导引共同影响效率。",
+        "kpi": "回流效率 71%"
+      },
+      {
+        "roadId": "dispatch-link",
+        "label": "运力调度通道",
+        "detail": "出租车与摆渡车共享调度通道。",
+        "kpi": "补位节拍 5 分钟"
+      }
+    ]
+  },
+  {
+    "id": "optimized-dispatch",
+    "name": "优化调度场景",
+    "description": "通过出租车前置补位、网约车分流和摆渡站台重排进行交通协同优化。",
+    "regionId": "parking-p2",
+    "timeWindow": "14:00 - 17:00",
+    "dispatchRule": "出租车补位前置 + 网约车弹性分流 + 节点协同调度",
+    "parkingStrategy": "P2 分层导流、停车回流优先疏解",
+    "timeSlots": [
+      { "id": "arrival-peak", "label": "到港高峰", "impact": 1.04 },
+      { "id": "mixed-window", "label": "混合波段", "impact": 0.98 },
+      { "id": "departure-peak", "label": "离港高峰", "impact": 1.07 }
+    ],
+    "flightOptions": [
+      { "id": "regular-wave", "label": "常规波峰", "penalty": 0.0 },
+      { "id": "peak-stack", "label": "高峰叠加", "penalty": 0.04 },
+      { "id": "delay-stack", "label": "延误叠加", "penalty": 0.08 }
+    ],
+    "weatherOptions": [
+      { "id": "clear", "label": "晴间多云", "penalty": 0.0 },
+      { "id": "crosswind", "label": "短时侧风", "penalty": 0.06 },
+      { "id": "drizzle", "label": "小雨", "penalty": 0.04 }
+    ],
+    "businessOptions": [
+      { "id": "normal", "label": "常态保障", "boost": 0.0 },
+      { "id": "focused", "label": "重点保障", "boost": 0.025 },
+      { "id": "emergency", "label": "应急保障", "boost": 0.05 }
+    ],
+    "controlDefaults": {
+      "taxiReserve": 76,
+      "shuttleDispatch": 72,
+      "rideFence": 68,
+      "roadRelease": 74,
+      "parkingGuide": 79
+    },
+    "metrics": [
+      { "label": "平均停留时间", "value": 12.8, "unit": "分钟" },
+      { "label": "停车场使用效率", "value": 74, "unit": "%" },
+      { "label": "车辆平均数量", "value": 402, "unit": "辆" },
+      { "label": "道路拥堵指数", "value": 1.44, "unit": "" },
+      { "label": "方案评分", "value": 89, "unit": "分" }
+    ],
+    "roadLoads": [
+      { "roadId": "departure-lane", "level": "low" },
+      { "roadId": "arrival-lane", "level": "medium" },
+      { "roadId": "parking-link", "level": "medium" },
+      { "roadId": "dispatch-link", "level": "low" },
+      { "roadId": "airport-loop", "level": "low" }
+    ],
+    "trafficNodes": [
+      {
+        "id": "node-arrival",
+        "label": "到达接驳口",
+        "x": 518,
+        "y": 452,
+        "type": "node",
+        "status": "分区放行",
+        "detail": "楼前接驳带启用分区放行策略，缓解短停重叠。"
+      },
+      {
+        "id": "node-taxi",
+        "label": "出租车补位口",
+        "x": 228,
+        "y": 338,
+        "type": "dispatch",
+        "status": "前置补位",
+        "detail": "补位窗口前移，提前吸纳高峰期补位车辆。"
+      },
+      {
+        "id": "node-p2",
+        "label": "P2 回流口",
+        "x": 858,
+        "y": 392,
+        "type": "parking",
+        "status": "分层导流",
+        "detail": "停车回流与网约车回转分层导流，降低回流冲突。"
+      },
+      {
+        "id": "node-bus",
+        "label": "巴士集散口",
+        "x": 786,
+        "y": 512,
+        "type": "hub",
+        "status": "站台重排",
+        "detail": "巴士与摆渡站台重排，释放集散区通行能力。"
+      }
+    ],
+    "facilityPoints": [
+      { "id": "facility-guide", "label": "导向屏组", "x": 472, "y": 286, "type": "facility" },
+      { "id": "facility-barrier", "label": "电子围栏", "x": 302, "y": 478, "type": "facility" },
+      { "id": "facility-bay", "label": "临时上客湾", "x": 732, "y": 444, "type": "facility" },
+      { "id": "facility-dispatch", "label": "调度站位", "x": 658, "y": 548, "type": "facility" }
+    ],
+    "vehicleStreams": [
+      { "roadId": "arrival-lane", "count": 3, "tone": "warm", "speed": 1.8 },
+      { "roadId": "departure-lane", "count": 2, "tone": "cool", "speed": 2.1 },
+      { "roadId": "parking-link", "count": 2, "tone": "cool", "speed": 1.9 },
+      { "roadId": "dispatch-link", "count": 3, "tone": "accent", "speed": 2.2 }
+    ],
+    "roadNotes": [
+      {
+        "roadId": "arrival-lane",
+        "label": "到达层主车道",
+        "detail": "接驳带按分区放行，降低楼前短停重叠。",
+        "kpi": "平均通过 1.9 分钟"
+      },
+      {
+        "roadId": "parking-link",
+        "label": "停车接驳路",
+        "detail": "P2 回流与停车导引联动切换，强化回流效率。",
+        "kpi": "回流效率 84%"
+      },
+      {
+        "roadId": "dispatch-link",
+        "label": "运力调度通道",
+        "detail": "出租车与摆渡车以独立节拍协同运行。",
+        "kpi": "补位节拍 3 分钟"
+      }
+    ]
+  }
+]

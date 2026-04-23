@@ -1,0 +1,50 @@
+[
+  {
+    "id": "alert-delay",
+    "title": "T3 到港高峰叠加延误",
+    "level": "high",
+    "regionId": "arrival-curb",
+    "time": "14:26",
+    "status": "处置中",
+    "summary": "多架到港航班集中落地，楼前到达层排队压力快速上升。",
+    "suggestion": "启动摆渡车补位与出租车分区补位。",
+    "scenarioId": "flight-delay",
+    "relatedResourceIds": ["video-arrival-1", "video-curb-1", "video-taxi-1"]
+  },
+  {
+    "id": "alert-weather",
+    "title": "侧风天气影响摆渡效率",
+    "level": "medium",
+    "regionId": "bus-hub",
+    "time": "14:18",
+    "status": "持续监测",
+    "summary": "短时侧风导致部分摆渡线路发车间隔拉长，巴士集散区补位滞后。",
+    "suggestion": "切换恶劣天气模板，预评估摆渡运力缺口。",
+    "scenarioId": "bad-weather",
+    "relatedResourceIds": ["video-bus-1", "video-p2-1"]
+  },
+  {
+    "id": "alert-crowd",
+    "title": "T3 到达层客流突增",
+    "level": "high",
+    "regionId": "t3-terminal",
+    "time": "14:08",
+    "status": "待升级",
+    "summary": "行李提取后客流向到达层集中，短时疏散动线接近拥挤阈值。",
+    "suggestion": "预启大客流疏散方案，释放网约车与出租车双通道。",
+    "scenarioId": "crowd-surge",
+    "relatedResourceIds": ["video-t3-1", "video-arrival-1"]
+  },
+  {
+    "id": "alert-parking",
+    "title": "P2 临停区接近饱和",
+    "level": "low",
+    "regionId": "parking-p2",
+    "time": "13:56",
+    "status": "已提示",
+    "summary": "P2 临停区剩余车位持续下降，网约车接驳车辆周转变慢。",
+    "suggestion": "建议切换交通仿真优化方案，提前进行分流。",
+    "scenarioId": "optimized-dispatch",
+    "relatedResourceIds": ["video-p2-1"]
+  }
+]

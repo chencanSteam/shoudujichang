@@ -1,0 +1,50 @@
+[
+  {
+    "id": "video-t3-1",
+    "name": "T3 到达厅 1 号机位",
+    "regionId": "t3-terminal",
+    "position": { "x": 545, "y": 210 },
+    "streamPreview": "人流热点 / 到达出口",
+    "status": "online"
+  },
+  {
+    "id": "video-arrival-1",
+    "name": "到达层东侧全景",
+    "regionId": "arrival-curb",
+    "position": { "x": 478, "y": 408 },
+    "streamPreview": "车流排队 / 旅客集散",
+    "status": "online"
+  },
+  {
+    "id": "video-curb-1",
+    "name": "到达层西侧卡口",
+    "regionId": "arrival-curb",
+    "position": { "x": 344, "y": 442 },
+    "streamPreview": "卡口过车 / 车道压力",
+    "status": "online"
+  },
+  {
+    "id": "video-taxi-1",
+    "name": "出租车蓄车区入口",
+    "regionId": "taxi-pool",
+    "position": { "x": 180, "y": 330 },
+    "streamPreview": "蓄车排队 / 发车补位",
+    "status": "online"
+  },
+  {
+    "id": "video-p2-1",
+    "name": "P2 停车楼车位热区",
+    "regionId": "parking-p2",
+    "position": { "x": 858, "y": 362 },
+    "streamPreview": "临停饱和 / 车位周转",
+    "status": "online"
+  },
+  {
+    "id": "video-bus-1",
+    "name": "巴士集散区站台",
+    "regionId": "bus-hub",
+    "position": { "x": 754, "y": 488 },
+    "streamPreview": "巴士发车 / 摆渡组织",
+    "status": "online"
+  }
+]

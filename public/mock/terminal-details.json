@@ -1,0 +1,336 @@
+{
+  "terminals": [
+    {
+      "id": "t3-terminal",
+      "name": "T3 航站楼",
+      "defaultFloor": "f3",
+      "summary": "覆盖到达、换乘、出发三层空间，用于演示楼层切换、重点分区定位与视频点位联动。",
+      "floors": [
+        {
+          "id": "f1",
+          "name": "F1 到达层",
+          "subtitle": "到达旅客汇聚、出租车与网约车接驳的主要承压楼层，适合演示楼内外交通协同。",
+          "metrics": [
+            { "label": "实时客流", "value": "2,860 人" },
+            { "label": "网约车排队", "value": "14 分钟" },
+            { "label": "出租车补位", "value": "3 批次" }
+          ],
+          "zones": [
+            { "id": "arr-hall", "label": "到达大厅", "x": 70, "y": 90, "width": 420, "height": 146, "status": "高负荷", "tone": "hot", "detail": "多架到港航班旅客在此汇聚，短时滞留明显增加。" },
+            { "id": "arr-baggage", "label": "行李提取区", "x": 70, "y": 272, "width": 240, "height": 116, "status": "运行中", "tone": "active", "detail": "转盘周边秩序可控，主要压力来自取件后的瞬时外溢。" },
+            { "id": "arr-curb", "label": "楼前到达接驳带", "x": 342, "y": 272, "width": 300, "height": 116, "status": "拥堵缓释", "tone": "warn", "detail": "接驳车辆与行人交织，正在通过分流岗和导向屏缓解压力。" },
+            { "id": "arr-rail", "label": "轨道换乘口", "x": 520, "y": 92, "width": 122, "height": 146, "status": "平稳", "tone": "calm", "detail": "轨道接驳能力稳定，是当前主要疏散出口之一。" }
+          ],
+          "hotspots": [
+            { "id": "cam-arr-1", "label": "视频 1", "x": 162, "y": 126, "zoneId": "arr-hall", "videoId": "t3-f1-video-hall", "detail": "到达大厅旅客聚集监看位" },
+            { "id": "cam-arr-2", "label": "视频 2", "x": 432, "y": 324, "zoneId": "arr-curb", "videoId": "t3-f1-video-curb", "detail": "楼前接驳带车流监看位" },
+            { "id": "gate-arr-1", "label": "接驳口 A", "x": 574, "y": 154, "zoneId": "arr-rail", "videoId": "t3-f1-video-rail", "detail": "轨道换乘与人流分配点" }
+          ],
+          "alerts": [
+            {
+              "id": "t3-f1-alert-arrival",
+              "title": "到达大厅客流持续上扬",
+              "level": "high",
+              "time": "14:27",
+              "status": "处置中",
+              "summary": "到港旅客在到达大厅持续堆积，滞留时间超过预设阈值。",
+              "scenarioId": "crowd-surge",
+              "zoneId": "arr-hall",
+              "relatedVideoIds": ["t3-f1-video-hall"]
+            },
+            {
+              "id": "t3-f1-alert-curb",
+              "title": "楼前到达接驳压力上升",
+              "level": "medium",
+              "time": "14:22",
+              "status": "持续监测",
+              "summary": "接驳带车辆到发不均衡，短时排队向楼内回压。",
+              "scenarioId": "flight-delay",
+              "zoneId": "arr-curb",
+              "relatedVideoIds": ["t3-f1-video-curb", "t3-f1-video-rail"]
+            },
+            {
+              "id": "t3-f1-alert-rail",
+              "title": "轨道换乘疏散能力可提升",
+              "level": "low",
+              "time": "14:16",
+              "status": "建议优化",
+              "summary": "轨道换乘口具备额外承接能力，建议继续向此处导流。",
+              "scenarioId": "optimized-dispatch",
+              "zoneId": "arr-rail",
+              "relatedVideoIds": ["t3-f1-video-rail"]
+            }
+          ],
+          "videos": [
+            {
+              "id": "t3-f1-video-hall",
+              "name": "到达大厅热区视频",
+              "streamPreview": "旅客聚集 / 疏导广播 / 人流密度",
+              "status": "online",
+              "zoneId": "arr-hall",
+              "hotspotId": "cam-arr-1"
+            },
+            {
+              "id": "t3-f1-video-curb",
+              "name": "到达接驳带全景",
+              "streamPreview": "排队长度 / 车辆轮换 / 接驳节奏",
+              "status": "online",
+              "zoneId": "arr-curb",
+              "hotspotId": "cam-arr-2"
+            },
+            {
+              "id": "t3-f1-video-rail",
+              "name": "轨道换乘口联动视角",
+              "streamPreview": "换乘导流 / 客流分叉 / 扶梯运行",
+              "status": "online",
+              "zoneId": "arr-rail",
+              "hotspotId": "gate-arr-1"
+            }
+          ],
+          "resources": [
+            {
+              "id": "t3-f1-resource-guide",
+              "title": "增派引导岗",
+              "typeLabel": "人员调度",
+              "detail": "向到达大厅与轨道换乘口加派 6 名引导员，优先分流未预约接驳旅客。",
+              "zoneId": "arr-hall",
+              "hotspotId": "cam-arr-1"
+            },
+            {
+              "id": "t3-f1-resource-lane",
+              "title": "开启临时接驳带",
+              "typeLabel": "交通处置",
+              "detail": "将楼前到达接驳带切换为双向疏散模式，缓释短时回压。",
+              "zoneId": "arr-curb",
+              "hotspotId": "cam-arr-2"
+            },
+            {
+              "id": "t3-f1-resource-rail",
+              "title": "轨道优先导流",
+              "typeLabel": "疏散策略",
+              "detail": "通过广播与导视将 18% 的接驳旅客引导至轨道换乘方向。",
+              "zoneId": "arr-rail",
+              "hotspotId": "gate-arr-1"
+            }
+          ]
+        },
+        {
+          "id": "f2",
+          "name": "F2 换乘层",
+          "subtitle": "安检后换乘与中转组织空间，承担横向分流与服务支撑，适合演示楼层资源调配。",
+          "metrics": [
+            { "label": "中转客流", "value": "1,420 人" },
+            { "label": "安检等待", "value": "9 分钟" },
+            { "label": "服务台告警", "value": "2 条" }
+          ],
+          "zones": [
+            { "id": "transfer-lobby", "label": "换乘大厅", "x": 82, "y": 92, "width": 264, "height": 154, "status": "运行中", "tone": "active", "detail": "中转旅客分散较均匀，整体秩序稳定。" },
+            { "id": "security-lane", "label": "安检通道", "x": 380, "y": 92, "width": 264, "height": 154, "status": "排队上升", "tone": "warn", "detail": "安检开启通道数不足，部分时段出现回压。" },
+            { "id": "service-core", "label": "服务核心区", "x": 82, "y": 284, "width": 196, "height": 104, "status": "平稳", "tone": "calm", "detail": "服务柜台运转正常，可承接更多现场咨询与改签。" },
+            { "id": "connector", "label": "换乘连廊", "x": 314, "y": 284, "width": 330, "height": 104, "status": "运行中", "tone": "active", "detail": "连廊移动顺畅，是分流中转旅客的关键通道。" }
+          ],
+          "hotspots": [
+            { "id": "cam-sec-1", "label": "安检视频", "x": 476, "y": 156, "zoneId": "security-lane", "videoId": "t3-f2-video-security", "detail": "安检排队与开道状态监看位" },
+            { "id": "desk-1", "label": "服务台", "x": 188, "y": 332, "zoneId": "service-core", "videoId": "t3-f2-video-service", "detail": "旅客咨询与服务调度位" },
+            { "id": "guide-1", "label": "引导屏", "x": 560, "y": 324, "zoneId": "connector", "videoId": "t3-f2-video-connector", "detail": "连廊导流与播报监看位" }
+          ],
+          "alerts": [
+            {
+              "id": "t3-f2-alert-security",
+              "title": "安检等待时长接近阈值",
+              "level": "medium",
+              "time": "14:21",
+              "status": "持续监测",
+              "summary": "安检通道队列拉长，建议增开临时引导口并启动错峰广播。",
+              "scenarioId": "crowd-surge",
+              "zoneId": "security-lane",
+              "relatedVideoIds": ["t3-f2-video-security"]
+            },
+            {
+              "id": "t3-f2-alert-transfer",
+              "title": "换乘大厅中转旅客波动上升",
+              "level": "low",
+              "time": "14:12",
+              "status": "已提示",
+              "summary": "中转旅客在短时窗口增加，当前仍可通过连廊消化。",
+              "scenarioId": "flight-delay",
+              "zoneId": "transfer-lobby",
+              "relatedVideoIds": ["t3-f2-video-connector"]
+            },
+            {
+              "id": "t3-f2-alert-service",
+              "title": "服务台改签咨询集中",
+              "level": "low",
+              "time": "14:05",
+              "status": "人工介入",
+              "summary": "因延误改签咨询增多，建议分流旅客至自助服务设备。",
+              "scenarioId": "flight-delay",
+              "zoneId": "service-core",
+              "relatedVideoIds": ["t3-f2-video-service"]
+            }
+          ],
+          "videos": [
+            {
+              "id": "t3-f2-video-security",
+              "name": "安检通道联动视频",
+              "streamPreview": "排队长度 / 开道状态 / 安检节奏",
+              "status": "online",
+              "zoneId": "security-lane",
+              "hotspotId": "cam-sec-1"
+            },
+            {
+              "id": "t3-f2-video-service",
+              "name": "服务台作业视角",
+              "streamPreview": "咨询压力 / 改签服务 / 自助引导",
+              "status": "online",
+              "zoneId": "service-core",
+              "hotspotId": "desk-1"
+            },
+            {
+              "id": "t3-f2-video-connector",
+              "name": "换乘连廊全景",
+              "streamPreview": "客流分叉 / 引导播报 / 过街节奏",
+              "status": "online",
+              "zoneId": "connector",
+              "hotspotId": "guide-1"
+            }
+          ],
+          "resources": [
+            {
+              "id": "t3-f2-resource-security",
+              "title": "增开临时安检道",
+              "typeLabel": "安检策略",
+              "detail": "将东侧弹性通道切换为旅客优先通道，降低短时等待峰值。",
+              "zoneId": "security-lane",
+              "hotspotId": "cam-sec-1"
+            },
+            {
+              "id": "t3-f2-resource-service",
+              "title": "自助服务引导",
+              "typeLabel": "旅客服务",
+              "detail": "在服务台前加设电子引导牌，将改签旅客分流至自助设备。",
+              "zoneId": "service-core",
+              "hotspotId": "desk-1"
+            },
+            {
+              "id": "t3-f2-resource-transfer",
+              "title": "连廊动态播报",
+              "typeLabel": "现场组织",
+              "detail": "按 5 分钟节拍更新引导屏，持续将中转旅客导向低负荷路径。",
+              "zoneId": "connector",
+              "hotspotId": "guide-1"
+            }
+          ]
+        },
+        {
+          "id": "f3",
+          "name": "F3 出发层",
+          "subtitle": "值机、安检前排队与出发旅客组织楼层，是楼内外接驳压力最敏感的出发场景。",
+          "metrics": [
+            { "label": "出发客流", "value": "3,240 人" },
+            { "label": "值机排队", "value": "18 分钟" },
+            { "label": "开放柜台", "value": "24 个" }
+          ],
+          "zones": [
+            { "id": "checkin-east", "label": "值机东区", "x": 78, "y": 90, "width": 248, "height": 150, "status": "高负荷", "tone": "hot", "detail": "多家航司集中值机，队列长度持续保持高位。" },
+            { "id": "checkin-west", "label": "值机西区", "x": 350, "y": 90, "width": 214, "height": 150, "status": "运行中", "tone": "active", "detail": "西区承压相对平稳，可承接部分东区旅客分流。" },
+            { "id": "security-pre", "label": "安检前缓冲区", "x": 78, "y": 274, "width": 200, "height": 112, "status": "排队上升", "tone": "warn", "detail": "值机后的旅客快速汇入缓冲区，队列增长明显。" },
+            { "id": "curb-departure", "label": "楼前出发上客带", "x": 304, "y": 274, "width": 340, "height": 112, "status": "送客高峰", "tone": "hot", "detail": "社会车辆与网约车上客叠加，对楼前排布造成持续压力。" }
+          ],
+          "hotspots": [
+            { "id": "cam-checkin", "label": "值机视频", "x": 160, "y": 132, "zoneId": "checkin-east", "videoId": "t3-f3-video-checkin", "detail": "值机东区排队监看位" },
+            { "id": "cam-curb", "label": "楼前卡口", "x": 552, "y": 328, "zoneId": "curb-departure", "videoId": "t3-f3-video-curb", "detail": "出发上客带车辆组织监看位" },
+            { "id": "gate-drop", "label": "送客口", "x": 402, "y": 330, "zoneId": "security-pre", "videoId": "t3-f3-video-security", "detail": "安检前缓冲与送客分流节点" }
+          ],
+          "alerts": [
+            {
+              "id": "t3-f3-alert-checkin",
+              "title": "值机东区排队超过基线",
+              "level": "high",
+              "time": "14:29",
+              "status": "处置中",
+              "summary": "东区多家航司队列叠加，旅客等待时长已超过当前航次均值。",
+              "scenarioId": "flight-delay",
+              "zoneId": "checkin-east",
+              "relatedVideoIds": ["t3-f3-video-checkin"]
+            },
+            {
+              "id": "t3-f3-alert-security",
+              "title": "安检前缓冲区排队上升",
+              "level": "medium",
+              "time": "14:24",
+              "status": "持续监测",
+              "summary": "值机完成旅客向安检前缓冲区集中，建议前移引导广播。",
+              "scenarioId": "crowd-surge",
+              "zoneId": "security-pre",
+              "relatedVideoIds": ["t3-f3-video-security"]
+            },
+            {
+              "id": "t3-f3-alert-curb",
+              "title": "楼前出发上客带承压增大",
+              "level": "medium",
+              "time": "14:12",
+              "status": "建议优化",
+              "summary": "送客车辆短时叠加，建议切换交通优化方案并限制临停时长。",
+              "scenarioId": "optimized-dispatch",
+              "zoneId": "curb-departure",
+              "relatedVideoIds": ["t3-f3-video-curb"]
+            }
+          ],
+          "videos": [
+            {
+              "id": "t3-f3-video-checkin",
+              "name": "值机东区热区视频",
+              "streamPreview": "队列长度 / 柜台开放 / 航班聚集",
+              "status": "online",
+              "zoneId": "checkin-east",
+              "hotspotId": "cam-checkin"
+            },
+            {
+              "id": "t3-f3-video-security",
+              "name": "安检前缓冲区视频",
+              "streamPreview": "客流回压 / 引导广播 / 通道节奏",
+              "status": "online",
+              "zoneId": "security-pre",
+              "hotspotId": "gate-drop"
+            },
+            {
+              "id": "t3-f3-video-curb",
+              "name": "出发上客带全景",
+              "streamPreview": "送客落客 / 车流轮换 / 卡口放行",
+              "status": "online",
+              "zoneId": "curb-departure",
+              "hotspotId": "cam-curb"
+            }
+          ],
+          "resources": [
+            {
+              "id": "t3-f3-resource-checkin",
+              "title": "值机柜台弹性增开",
+              "typeLabel": "柜台调度",
+              "detail": "将西区 4 个弹性柜台切换为东区补位柜台，降低高峰排队长度。",
+              "zoneId": "checkin-east",
+              "hotspotId": "cam-checkin"
+            },
+            {
+              "id": "t3-f3-resource-security",
+              "title": "缓冲区前移引导",
+              "typeLabel": "现场组织",
+              "detail": "在安检前缓冲区前移设置引导岗，减少送客与排队流线交叉。",
+              "zoneId": "security-pre",
+              "hotspotId": "gate-drop"
+            },
+            {
+              "id": "t3-f3-resource-curb",
+              "title": "楼前分时上客",
+              "typeLabel": "交通策略",
+              "detail": "对楼前出发上客带执行分时放行，优先保障短停车辆快速离场。",
+              "zoneId": "curb-departure",
+              "hotspotId": "cam-curb"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

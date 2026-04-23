@@ -1,0 +1,113 @@
+{
+  "viewport": { "width": 1100, "height": 700 },
+  "regions": [
+    {
+      "id": "t3-terminal",
+      "name": "T3 航站楼",
+      "type": "terminal",
+      "tone": "terminal",
+      "shape": { "x": 390, "y": 250, "width": 270, "height": 70, "depth": 54, "skew": 44 },
+      "label": { "x": 540, "y": 225 },
+      "description": "到达旅客、安检与楼前交通组织的核心区域"
+    },
+    {
+      "id": "departure-curb",
+      "name": "出发层车道",
+      "type": "curb",
+      "tone": "curb",
+      "shape": { "x": 332, "y": 366, "width": 420, "height": 42, "depth": 22, "skew": 28 },
+      "label": { "x": 536, "y": 355 },
+      "description": "送客落客与社会车辆快速通行区域"
+    },
+    {
+      "id": "arrival-curb",
+      "name": "到达层车道",
+      "type": "curb",
+      "tone": "curb",
+      "shape": { "x": 302, "y": 432, "width": 474, "height": 44, "depth": 24, "skew": 30 },
+      "label": { "x": 540, "y": 420 },
+      "description": "出租车、网约车、摆渡车旅客集散区域"
+    },
+    {
+      "id": "parking-p1",
+      "name": "P1 停车楼",
+      "type": "parking",
+      "tone": "parking",
+      "shape": { "x": 760, "y": 265, "width": 126, "height": 82, "depth": 48, "skew": 40 },
+      "label": { "x": 832, "y": 240 },
+      "description": "临停车辆与贵宾车辆停放区域"
+    },
+    {
+      "id": "parking-p2",
+      "name": "P2 停车楼",
+      "type": "parking",
+      "tone": "parking",
+      "shape": { "x": 788, "y": 378, "width": 148, "height": 90, "depth": 50, "skew": 42 },
+      "label": { "x": 868, "y": 350 },
+      "description": "网约车与社会停车的主要承载区域"
+    },
+    {
+      "id": "taxi-pool",
+      "name": "出租车蓄车区",
+      "type": "dispatch",
+      "tone": "dispatch",
+      "shape": { "x": 110, "y": 350, "width": 140, "height": 78, "depth": 34, "skew": 24 },
+      "label": { "x": 182, "y": 326 },
+      "description": "出租车排队与补位发车区域"
+    },
+    {
+      "id": "ride-hailing",
+      "name": "网约车候客区",
+      "type": "dispatch",
+      "tone": "dispatch",
+      "shape": { "x": 160, "y": 455, "width": 150, "height": 72, "depth": 30, "skew": 26 },
+      "label": { "x": 236, "y": 432 },
+      "description": "网约车上客与短停接驳区域"
+    },
+    {
+      "id": "bus-hub",
+      "name": "巴士集散区",
+      "type": "dispatch",
+      "tone": "hub",
+      "shape": { "x": 694, "y": 504, "width": 182, "height": 66, "depth": 30, "skew": 32 },
+      "label": { "x": 786, "y": 478 },
+      "description": "机场巴士、摆渡车与应急运力集散区域"
+    },
+    {
+      "id": "command-center",
+      "name": "监测大厅",
+      "type": "control",
+      "tone": "control",
+      "shape": { "x": 520, "y": 128, "width": 118, "height": 44, "depth": 24, "skew": 22 },
+      "label": { "x": 582, "y": 110 },
+      "description": "监测、调度与指挥统一入口"
+    }
+  ],
+  "roads": [
+    {
+      "id": "airport-loop",
+      "name": "机场外环主路",
+      "path": "M 72 550 C 242 620 840 622 1018 530"
+    },
+    {
+      "id": "departure-lane",
+      "name": "出发层主车道",
+      "path": "M 232 380 C 350 360 674 350 862 386"
+    },
+    {
+      "id": "arrival-lane",
+      "name": "到达层主车道",
+      "path": "M 216 466 C 372 452 674 446 922 470"
+    },
+    {
+      "id": "parking-link",
+      "name": "停车接驳路",
+      "path": "M 706 470 C 764 456 812 432 850 392"
+    },
+    {
+      "id": "dispatch-link",
+      "name": "运力调度通道",
+      "path": "M 260 506 C 392 572 592 596 730 556"
+    }
+  ]
+}
