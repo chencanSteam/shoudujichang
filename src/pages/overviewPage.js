@@ -17,12 +17,22 @@ export function renderOverviewPage({ data, route, state, navigate }) {
   const airportAlert = resolveActiveAlert(data, route, state);
   const airportVideo = resolveActiveVideo(data, route, state, airportAlert);
   const focusRegion = resolveFocusRegion(data, route, state, airportAlert, airportVideo);
+  const overviewDevices = buildOverviewDevices(data, focusRegion, airportAlert, state.overviewExercise);
+  const activeDevice = resolveActiveDevice(overviewDevices, state.selection.deviceId);
   const activeTerminal = resolveActiveTerminal(data, route);
   const activeFloor = resolveActiveFloor(activeTerminal, route);
+  const searchResultOverlay = activeTerminal
+    ? null
+    : buildSearchResultOverlay(data, state.ui.searchResultContext, {
+        airportAlert,
+        airportVideo,
+        focusRegion,
+        overviewDevices,
+      });
   const terminalContext =
     activeTerminal && activeFloor ? resolveTerminalContext(activeFloor, route) : null;
   const sceneAlert = terminalContext?.activeAlert ?? airportAlert;
-  const searchPool = activeTerminal && activeFloor ? buildTerminalSearchPool(activeFloor) : [];
+  const searchPool = activeTerminal && activeFloor ? buildTerminalSearchPool(activeFloor) : buildSearchPool(data);
   const searchPlaceholder = activeTerminal
     ? '搜索楼层分区、视频、资源或处置要点'
     : '搜索区域、视频或预警关键词';
@@ -38,16 +48,22 @@ export function renderOverviewPage({ data, route, state, navigate }) {
           mapAssets: data.mapAssets,
           alerts: data.alerts,
           videos: data.videos,
+          overviewDevices,
           mode: 'overview',
           focusRegionId: focusRegion.id,
           activeAlertId: airportAlert.id,
           activeVideoId: airportVideo.id,
+          activeDeviceId: activeDevice?.id ?? null,
+          activeDevice,
+          searchResultOverlay,
           transportLayers: state.ui.overviewTransportLayers,
+          overviewExercise: state.ui.scriptPanelOpen ? state.overviewExercise : null,
         });
 
   state.selection.alertId = airportAlert.id;
   state.selection.videoId = airportVideo.id;
   state.selection.regionId = focusRegion.id;
+  state.selection.deviceId = activeDevice?.id ?? null;
 
   const kpis = buildKpis(data.overview.heroMetrics, state.runtime.dataTick);
 
@@ -82,6 +98,7 @@ export function renderOverviewPage({ data, route, state, navigate }) {
                 focusRegion,
                 airportAlert,
                 airportVideo,
+                overviewDevices,
                 activeTerminal,
                 activeFloor,
               })}
@@ -118,9 +135,33 @@ export function renderOverviewPage({ data, route, state, navigate }) {
 
           <section class="panel panel--map reveal" style="animation-delay: 60ms;">
             <div class="panel-heading panel-heading--map">
-              <div>
+              <div class="panel-heading__stack">
                 <span class="panel-kicker">${activeTerminal ? '楼内钻取' : '一张图总览'}</span>
                 <h2>${activeTerminal ? `${activeTerminal.name} 楼内模型` : '监测大厅可视化决策展示'}</h2>
+                ${
+                  activeTerminal
+                    ? ''
+                    : `
+                      <div class="map-search-layer ${state.ui.mapSearchOpen ? 'is-open' : ''}">
+                        <button
+                          class="map-search-toggle"
+                          type="button"
+                          data-toggle-map-search
+                          aria-pressed="${state.ui.mapSearchOpen}"
+                        >
+                          ${state.ui.mapSearchOpen ? '收起搜索' : '展开搜索'}
+                        </button>
+                        <div class="map-search-panel">
+                          <label class="search-box map-search-box">
+                            <input class="search-box__input" type="search" placeholder="${searchPlaceholder}" />
+                          </label>
+                          <div class="search-results search-results--floating js-search-results">
+                            ${renderSearchResults(searchPool, '')}
+                          </div>
+                        </div>
+                      </div>
+                    `
+                }
               </div>
               <div class="map-state">
                 <span class="dot dot--live"></span>
@@ -148,6 +189,7 @@ export function renderOverviewPage({ data, route, state, navigate }) {
         airportAlert,
         airportVideo,
         focusRegion,
+        overviewDevices,
         activeTerminal,
         activeFloor,
         terminalContext,
@@ -278,6 +320,7 @@ function renderOverviewAssurancePanel({
   focusRegion,
   airportAlert,
   airportVideo,
+  overviewDevices,
   activeTerminal,
   activeFloor,
 }) {
@@ -286,6 +329,7 @@ function renderOverviewAssurancePanel({
     focusRegion,
     airportAlert,
     airportVideo,
+    overviewDevices,
     activeTerminal,
     activeFloor,
   });
@@ -315,6 +359,7 @@ function buildOverviewAssuranceItems({
   focusRegion,
   airportAlert,
   airportVideo,
+  overviewDevices = [],
   activeTerminal,
   activeFloor,
 }) {
@@ -323,6 +368,8 @@ function buildOverviewAssuranceItems({
   const parkingMetric = data.overview.heroMetrics.find((item) => item.id === 'parking-usage');
   const rideMetric = data.overview.heroMetrics.find((item) => item.id === 'ride-demand');
   const activeAlerts = data.alerts.filter((item) => item.status === '处置中');
+  const activeDevices = overviewDevices.filter((item) => item.state === 'active').length;
+  const alarmDevices = overviewDevices.filter((item) => item.state === 'alarm').length;
   const focusedLabel = activeTerminal
     ? `${activeTerminal.name} ${activeFloor?.name ?? ''}`.trim()
     : focusRegion.name;
@@ -359,6 +406,11 @@ function buildOverviewAssuranceItems({
         detail: `重点关注：${focusedLabel}，最新关联事件为“${airportAlert.title}”。`,
       },
       {
+        label: '设备联动',
+        value: `${activeDevices} 台启用 / ${alarmDevices} 台告警`,
+        detail: '设备对象随预警、演练和区域状态切换颜色、标签与启停状态。',
+      },
+      {
         label: '当前联动视频',
         value: airportVideo.name,
         detail: airportVideo.streamPreview,
@@ -370,6 +422,138 @@ function buildOverviewAssuranceItems({
       { label: `预警总数：${data.alerts.length}`, active: false },
     ],
   };
+}
+
+const OVERVIEW_DEVICE_STATE_RULES = {
+  active: { label: '已启用', tone: 'active' },
+  warm: { label: '联动待命', tone: 'warm' },
+  idle: { label: '待机中', tone: 'idle' },
+  alarm: { label: '告警联动', tone: 'alarm' },
+  offline: { label: '离线', tone: 'offline' },
+};
+
+function buildOverviewDevices(data, focusRegion, airportAlert, overviewExercise) {
+  const stepIndex = overviewExercise?.stepIndex ?? -1;
+
+  return (data.mapAssets.devices ?? []).map((device) => {
+    let state = device.baseState ?? 'idle';
+
+    if (device.regionId === airportAlert.regionId) {
+      state = airportAlert.level === 'high' ? 'alarm' : 'warm';
+    }
+
+    if (device.id === 'device-dispatch-console' && stepIndex >= 1) {
+      state = 'active';
+    }
+
+    if (device.id === 'device-guide-arrival' && stepIndex >= 2) {
+      state = 'active';
+    }
+
+    if (device.id === 'device-barrier-arrival' && stepIndex >= 2) {
+      state = 'alarm';
+    }
+
+    if (device.id === 'device-bus-broadcast' && stepIndex >= 2) {
+      state = 'active';
+    }
+
+    if (device.regionId === focusRegion.id && stepIndex >= 3) {
+      state = 'active';
+    }
+
+    if (device.regionId === focusRegion.id && stepIndex >= 4 && device.id === 'device-barrier-arrival') {
+      state = 'warm';
+    }
+
+    const display = OVERVIEW_DEVICE_STATE_RULES[state] ?? OVERVIEW_DEVICE_STATE_RULES.idle;
+
+    return {
+      ...device,
+      state,
+      status: display.label,
+      tone: display.tone,
+    };
+  });
+}
+
+function resolveActiveDevice(devices, currentDeviceId) {
+  return devices.find((item) => item.id === currentDeviceId) ?? null;
+}
+
+function buildSearchResultOverlay(data, searchContext, context) {
+  if (!searchContext) {
+    return null;
+  }
+
+  const { airportAlert, airportVideo, focusRegion, overviewDevices } = context;
+
+  if (searchContext.type === 'alert') {
+    const alert = data.alerts.find((item) => item.id === searchContext.id);
+    if (!alert) {
+      return null;
+    }
+
+    const region = data.mapAssets.regions.find((item) => item.id === alert.regionId) ?? focusRegion;
+    return {
+      kicker: '预警检索结果',
+      title: alert.title,
+      subtitle: alert.summary,
+      metaLabel: '状态',
+      metaValue: alert.status,
+      position: { x: region.label.x + 84, y: region.label.y - 12 },
+    };
+  }
+
+  if (searchContext.type === 'video') {
+    const video = data.videos.find((item) => item.id === searchContext.id);
+    if (!video) {
+      return null;
+    }
+
+    return {
+      kicker: '视频检索结果',
+      title: video.name,
+      subtitle: video.streamPreview,
+      metaLabel: '关联区域',
+      metaValue: data.mapAssets.regions.find((item) => item.id === video.regionId)?.name ?? airportVideo.name,
+      position: video.position,
+    };
+  }
+
+  if (searchContext.type === 'region') {
+    const region = data.mapAssets.regions.find((item) => item.id === searchContext.id);
+    if (!region) {
+      return null;
+    }
+
+    return {
+      kicker: '区域检索结果',
+      title: region.name,
+      subtitle: region.description,
+      metaLabel: '区域编码',
+      metaValue: region.id,
+      position: { x: region.label.x + 18, y: region.label.y - 18 },
+    };
+  }
+
+  if (searchContext.type === 'device') {
+    const device = overviewDevices.find((item) => item.id === searchContext.id);
+    if (!device) {
+      return null;
+    }
+
+    return {
+      kicker: '设备检索结果',
+      title: device.label,
+      subtitle: device.code,
+      metaLabel: '设备状态',
+      metaValue: device.status,
+      position: device.position,
+    };
+  }
+
+  return null;
 }
 
 function renderAreaLoadPanel(data, focusRegion) {
@@ -739,6 +923,7 @@ function setupOverviewPage({
   airportAlert,
   airportVideo,
   focusRegion,
+  overviewDevices,
   activeTerminal,
   activeFloor,
   terminalContext,
@@ -752,29 +937,32 @@ function setupOverviewPage({
   const overviewGrid = container.querySelector('.page-grid--overview');
   const searchPool =
     activeTerminal && activeFloor ? buildTerminalSearchPool(activeFloor) : buildSearchPool(data);
-  const searchPanel = container.querySelector('.search-box__input')?.closest('.panel');
 
   footerPanel?.remove();
-  searchPanel?.remove();
   overviewPage?.classList.add('page--overview-compact');
   overviewGrid?.classList.add('page-grid--overview-compact');
 
   const trendChart = null;
   const areaChart = null;
 
-  resourceLinkagePanel?.replaceChildren();
-  resourceLinkagePanel?.insertAdjacentHTML(
-    'afterbegin',
-    renderOverviewAssurancePanel({
+  const renderAirportAssurance = (devices = overviewDevices) => {
+    if (!resourceLinkagePanel) {
+      return;
+    }
+
+    resourceLinkagePanel.innerHTML = renderOverviewAssurancePanel({
       data,
       focusRegion,
       airportAlert,
       airportVideo,
+      overviewDevices: devices,
       activeTerminal,
       activeFloor,
       terminalContext,
-    }),
-  );
+    });
+  };
+
+  renderAirportAssurance();
 
   if (activeTerminal && activeFloor && rightRail) {
     setupTerminalOverviewInteractions({
@@ -811,15 +999,35 @@ function setupOverviewPage({
       return;
     }
 
+    const nextOverviewDevices = buildOverviewDevices(
+      data,
+      focusRegion,
+      airportAlert,
+      state.overviewExercise,
+    );
+    const selectedDevice = resolveActiveDevice(nextOverviewDevices, state.selection.deviceId);
+    renderAirportAssurance(nextOverviewDevices);
+    const searchOverlay = buildSearchResultOverlay(data, state.ui.searchResultContext, {
+      airportAlert,
+      airportVideo,
+      focusRegion,
+      overviewDevices: nextOverviewDevices,
+    });
+
     sceneSlot.innerHTML = renderMapScene({
       mapAssets: data.mapAssets,
       alerts: data.alerts,
       videos: data.videos,
+      overviewDevices: nextOverviewDevices,
       mode: 'overview',
       focusRegionId: focusRegion.id,
       activeAlertId: airportAlert.id,
       activeVideoId: airportVideo.id,
+      activeDeviceId: selectedDevice?.id ?? null,
+      activeDevice: selectedDevice,
+      searchResultOverlay: searchOverlay,
       transportLayers: state.ui.overviewTransportLayers,
+      overviewExercise: state.ui.scriptPanelOpen ? state.overviewExercise : null,
     });
 
     bindSceneLinks(sceneSlot, data, navigate, {
@@ -842,7 +1050,20 @@ function setupOverviewPage({
         renderAirportScene();
       });
     });
+
+    sceneSlot.querySelectorAll('[data-device-id]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const nextId = button.dataset.deviceId ?? null;
+        state.selection.deviceId = state.selection.deviceId === nextId ? null : nextId;
+        renderAirportScene();
+      });
+    });
   };
+
+  const onOverviewExerciseChange = () => {
+    renderAirportScene();
+  };
+  window.addEventListener('overview-exercise-change', onOverviewExerciseChange);
 
   container.querySelectorAll('[data-select-alert]').forEach((button) => {
     button.addEventListener('click', () => {
@@ -1082,10 +1303,16 @@ function setupOverviewPage({
     });
   });
 
+  container.querySelector('[data-toggle-map-search]')?.addEventListener('click', () => {
+    state.ui.mapSearchOpen = !state.ui.mapSearchOpen;
+    rerenderOverviewSearch(container, searchPool, state);
+  });
+
   if (searchInput && searchResults) {
     searchInput.addEventListener('input', () => {
       searchResults.innerHTML = renderSearchResults(searchPool, searchInput.value);
       bindSearchResults(searchResults, data, navigate, {
+        state,
         airportAlert,
         airportVideo,
         focusRegion,
@@ -1096,6 +1323,7 @@ function setupOverviewPage({
     });
 
     bindSearchResults(searchResults, data, navigate, {
+      state,
       airportAlert,
       airportVideo,
       focusRegion,
@@ -1114,6 +1342,7 @@ function setupOverviewPage({
 
   return () => {
     window.clearInterval(refreshTimer);
+    window.removeEventListener('overview-exercise-change', onOverviewExerciseChange);
   };
 }
 
@@ -1844,13 +2073,14 @@ function bindSceneLinks(container, data, navigate, context) {
 }
 
 function bindSearchResults(container, data, navigate, context) {
-  const { airportAlert, airportVideo, focusRegion, activeTerminal, activeFloor, terminalContext } =
+  const { state, airportAlert, airportVideo, focusRegion, activeTerminal, activeFloor, terminalContext } =
     context;
 
   container.querySelectorAll('[data-search-type]').forEach((button) => {
     button.addEventListener('click', () => {
       const type = button.dataset.searchType;
       const id = button.dataset.searchId;
+      state.ui.searchResultContext = { type, id };
 
       if (type === 'alert') {
         const alert = data.alerts.find((item) => item.id === id);
@@ -1876,6 +2106,23 @@ function bindSearchResults(container, data, navigate, context) {
           alert: airportAlert.id,
           video: video.id,
           region: video.regionId,
+        });
+        return;
+      }
+
+      if (type === 'device') {
+        const device = data.mapAssets.devices.find((item) => item.id === id);
+        if (!device) {
+          return;
+        }
+
+        const deviceRegion =
+          data.mapAssets.regions.find((item) => item.id === device.regionId) ?? focusRegion;
+
+        navigate('overview', {
+          alert: data.alerts.find((item) => item.regionId === device.regionId)?.id ?? airportAlert.id,
+          video: airportVideo.id,
+          region: deviceRegion.id,
         });
         return;
       }
@@ -2212,20 +2459,34 @@ function buildSearchPool(data) {
     ...data.mapAssets.regions.map((region) => ({
       type: 'region',
       id: region.id,
+      typeLabel: '区域',
       title: region.name,
       subtitle: region.description,
+      meta: region.id,
     })),
     ...data.videos.map((video) => ({
       type: 'video',
       id: video.id,
+      typeLabel: '视频',
       title: video.name,
       subtitle: video.streamPreview,
+      meta: video.regionId,
     })),
     ...data.alerts.map((alert) => ({
       type: 'alert',
       id: alert.id,
+      typeLabel: '预警',
       title: alert.title,
       subtitle: alert.summary,
+      meta: `${alert.level.toUpperCase()} / ${alert.status}`,
+    })),
+    ...data.mapAssets.devices.map((device) => ({
+      type: 'device',
+      id: device.id,
+      typeLabel: '设备',
+      title: device.label,
+      subtitle: device.code,
+      meta: device.regionId,
     })),
   ];
 }
@@ -2235,32 +2496,42 @@ function buildTerminalSearchPool(activeFloor) {
     ...activeFloor.zones.map((zone) => ({
       type: 'zone',
       id: zone.id,
+      typeLabel: '分区',
       title: zone.label,
       subtitle: zone.detail ?? zone.status,
+      meta: zone.status,
     })),
     ...activeFloor.hotspots.map((hotspot) => ({
       type: 'hotspot',
       id: hotspot.id,
+      typeLabel: '热点',
       title: hotspot.label,
       subtitle: hotspot.detail,
+      meta: hotspot.zoneId,
     })),
     ...activeFloor.videos.map((video) => ({
       type: 'floor-video',
       id: video.id,
+      typeLabel: '楼层视频',
       title: video.name,
       subtitle: video.streamPreview,
+      meta: video.zoneId,
     })),
     ...activeFloor.alerts.map((alert) => ({
       type: 'floor-alert',
       id: alert.id,
+      typeLabel: '楼层预警',
       title: alert.title,
       subtitle: alert.summary,
+      meta: alert.status,
     })),
     ...activeFloor.resources.map((resource) => ({
       type: 'resource',
       id: resource.id,
+      typeLabel: '资源',
       title: resource.title,
       subtitle: resource.detail,
+      meta: resource.zoneId,
     })),
   ];
 }
@@ -2288,6 +2559,23 @@ function buildTerminalRouteParams({
   };
 }
 
+function rerenderOverviewSearch(container, searchPool, state) {
+  const layer = container.querySelector('.map-search-layer');
+  const toggle = container.querySelector('[data-toggle-map-search]');
+  const results = container.querySelector('.js-search-results');
+  const input = container.querySelector('.search-box__input');
+
+  layer?.classList.toggle('is-open', state.ui.mapSearchOpen);
+  if (toggle) {
+    toggle.setAttribute('aria-pressed', String(state.ui.mapSearchOpen));
+    toggle.textContent = state.ui.mapSearchOpen ? '收起搜索' : '展开搜索';
+  }
+
+  if (results && input) {
+    results.innerHTML = renderSearchResults(searchPool, input.value);
+  }
+}
+
 function renderSearchResults(pool, query) {
   const normalized = query.trim().toLowerCase();
   const results = normalized
@@ -2308,6 +2596,10 @@ function renderSearchResults(pool, query) {
           data-search-type="${item.type}"
           data-search-id="${item.id}"
         >
+          <div class="search-result__head">
+            <span class="search-result__type">${item.typeLabel ?? '对象'}</span>
+            <span class="search-result__meta">${item.meta ?? item.id}</span>
+          </div>
           <strong>${item.title}</strong>
           <small>${item.subtitle}</small>
         </button>

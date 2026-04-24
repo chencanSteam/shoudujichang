@@ -83,6 +83,68 @@
       "description": "监测、调度与指挥统一入口"
     }
   ],
+  "devices": [
+    {
+      "id": "device-guide-arrival",
+      "code": "DEV-GUIDE-01",
+      "label": "到达导向屏",
+      "type": "screen",
+      "regionId": "arrival-curb",
+      "statusField": "runState",
+      "position": { "x": 640, "y": 412 },
+      "baseState": "active"
+    },
+    {
+      "id": "device-barrier-arrival",
+      "code": "DEV-BARRIER-01",
+      "label": "电子围栏",
+      "type": "barrier",
+      "regionId": "arrival-curb",
+      "statusField": "runState",
+      "position": { "x": 448, "y": 442 },
+      "baseState": "idle"
+    },
+    {
+      "id": "device-dispatch-console",
+      "code": "DEV-DISPATCH-01",
+      "label": "调度终端",
+      "type": "console",
+      "regionId": "command-center",
+      "statusField": "runState",
+      "position": { "x": 646, "y": 152 },
+      "baseState": "active"
+    },
+    {
+      "id": "device-bus-broadcast",
+      "code": "DEV-BROADCAST-01",
+      "label": "广播终端",
+      "type": "broadcast",
+      "regionId": "bus-hub",
+      "statusField": "runState",
+      "position": { "x": 862, "y": 500 },
+      "baseState": "idle"
+    },
+    {
+      "id": "device-p2-gate",
+      "code": "DEV-GATE-02",
+      "label": "车位计数闸机",
+      "type": "gate",
+      "regionId": "parking-p2",
+      "statusField": "runState",
+      "position": { "x": 936, "y": 390 },
+      "baseState": "warm"
+    },
+    {
+      "id": "device-taxi-bay",
+      "code": "DEV-BAY-01",
+      "label": "补位指示灯",
+      "type": "bay",
+      "regionId": "taxi-pool",
+      "statusField": "runState",
+      "position": { "x": 242, "y": 360 },
+      "baseState": "idle"
+    }
+  ],
   "roads": [
     {
       "id": "airport-loop",

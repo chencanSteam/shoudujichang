@@ -73,20 +73,39 @@ const OVERVIEW_TRANSPORT_LAYERS = [
       { roadId: 'arrival-lane', count: 2, speed: 1.55, radius: 4, offset: 0.72 },
     ],
   },
+  {
+    id: 'patrolPersonnel',
+    label: '巡检人员',
+    tone: 'patrol-personnel',
+  },
+  {
+    id: 'patrolVehicle',
+    label: '巡检车辆',
+    tone: 'patrol-vehicle',
+    streams: [
+      { roadId: 'airport-loop', count: 2, speed: 1.45, radius: 4.8, offset: 0.22 },
+      { roadId: 'arrival-lane', count: 1, speed: 1.35, radius: 4.6, offset: 0.58 },
+    ],
+  },
 ];
 
 export function renderMapScene({
   mapAssets,
   alerts = [],
   videos = [],
+  overviewDevices = [],
   mode = 'overview',
   focusRegionId,
   activeAlertId,
   activeVideoId,
+  activeDeviceId,
+  activeDevice,
+  searchResultOverlay,
   emergencyScenario,
   emergencyProgress = 0,
   trafficScenario,
   transportLayers = null,
+  overviewExercise = null,
 }) {
   const roadLevels = new Map(
     (trafficScenario?.roadLoads ?? []).map((item) => [item.roadId, item.level]),
@@ -158,6 +177,7 @@ export function renderMapScene({
         <rect class="scene-bg" x="0" y="0" width="${mapAssets.viewport.width}" height="${mapAssets.viewport.height}"></rect>
         <ellipse class="scene-halo" cx="548" cy="408" rx="438" ry="192"></ellipse>
         <ellipse class="scene-halo scene-halo--secondary" cx="550" cy="520" rx="520" ry="138"></ellipse>
+        ${renderSimulatedGisLayer(mapAssets)}
 
         ${mapAssets.roads
           .map(
@@ -189,9 +209,12 @@ export function renderMapScene({
           .join('')}
 
         ${trafficScenario ? renderTrafficFacilities(trafficScenario) : ''}
+        ${mode === 'overview' ? renderOverviewDevices(overviewDevices, activeDeviceId) : ''}
         ${trafficScenario ? renderTrafficNodes(trafficScenario) : ''}
         ${trafficScenario ? renderTrafficVehicles(trafficScenario, mapAssets) : ''}
         ${mode === 'overview' ? renderOverviewTransportVehicles(mapAssets, transportLayerState) : ''}
+        ${mode === 'overview' ? renderOverviewPatrolUnits(mapAssets, transportLayerState) : ''}
+        ${mode === 'overview' ? renderOverviewExerciseLayer(mapAssets, focusRegion, overviewExercise) : ''}
 
         ${videos
           .map(
@@ -248,6 +271,8 @@ export function renderMapScene({
             : ''
         }
       </svg>
+      ${mode === 'overview' ? renderOverviewDevicePopup(activeDevice, mapAssets) : ''}
+      ${mode === 'overview' ? renderSearchResultPopup(searchResultOverlay, mapAssets) : ''}
     </div>
   `;
 }
@@ -304,18 +329,84 @@ function renderTrafficVehicles(trafficScenario, mapAssets) {
     .join('');
 }
 
+function renderOverviewDevices(overviewDevices, activeDeviceId) {
+  return (overviewDevices ?? [])
+    .map(
+      (device) => `
+        <g
+          class="scene-facility scene-facility--${device.state ?? 'idle'} ${device.id === activeDeviceId ? 'is-active' : ''}"
+          data-device-id="${device.id}"
+          transform="translate(${device.position.x} ${device.position.y})"
+        >
+          <rect x="-9" y="-9" width="18" height="18" rx="4"></rect>
+          <text x="16" y="4">${device.label}</text>
+          <text class="scene-facility__status" x="16" y="18">${device.status}</text>
+        </g>
+      `,
+    )
+    .join('');
+}
+
+function renderOverviewDevicePopup(activeDevice, mapAssets) {
+  if (!activeDevice) {
+    return '';
+  }
+
+  const left = ((activeDevice.position.x / mapAssets.viewport.width) * 100).toFixed(2);
+  const top = ((activeDevice.position.y / mapAssets.viewport.height) * 100).toFixed(2);
+
+  return `
+    <div class="scene-device-popup" style="left:${left}%; top:${top}%;">
+      <span class="scene-device-popup__kicker">设备状态</span>
+      <strong>${activeDevice.label}</strong>
+      <p>${activeDevice.code}</p>
+      <div class="scene-device-popup__meta">
+        <span>状态</span>
+        <strong>${activeDevice.status}</strong>
+      </div>
+    </div>
+  `;
+}
+
+function renderSearchResultPopup(searchResultOverlay, mapAssets) {
+  if (!searchResultOverlay) {
+    return '';
+  }
+
+  const left = ((searchResultOverlay.position.x / mapAssets.viewport.width) * 100).toFixed(2);
+  const top = ((searchResultOverlay.position.y / mapAssets.viewport.height) * 100).toFixed(2);
+
+  return `
+    <div class="scene-search-popup" style="left:${left}%; top:${top}%;">
+      <span class="scene-search-popup__kicker">${searchResultOverlay.kicker}</span>
+      <strong>${searchResultOverlay.title}</strong>
+      <p>${searchResultOverlay.subtitle}</p>
+      <div class="scene-search-popup__meta">
+        <span>${searchResultOverlay.metaLabel}</span>
+        <strong>${searchResultOverlay.metaValue}</strong>
+      </div>
+    </div>
+  `;
+}
+
 function normalizeTransportLayers(transportLayers) {
   return {
     airportBus: transportLayers?.airportBus ?? true,
     taxi: transportLayers?.taxi ?? true,
     rideHailing: transportLayers?.rideHailing ?? true,
     privateCar: transportLayers?.privateCar ?? true,
+    patrolPersonnel: transportLayers?.patrolPersonnel ?? true,
+    patrolVehicle: transportLayers?.patrolVehicle ?? true,
   };
 }
 
 function renderOverviewTransportVehicles(mapAssets, transportLayerState) {
   return OVERVIEW_TRANSPORT_LAYERS.flatMap((layer) => {
-    if (!transportLayerState[layer.id]) {
+    if (
+      layer.id === 'patrolPersonnel' ||
+      layer.id === 'patrolVehicle' ||
+      !transportLayerState[layer.id]
+    ) {
       return [];
     }
 
@@ -339,6 +430,222 @@ function renderOverviewTransportVehicles(mapAssets, transportLayerState) {
       );
     });
   }).join('');
+}
+
+function renderOverviewPatrolUnits(mapAssets, transportLayerState) {
+  const patrolPersonnelPoints = [
+    { id: 'patrol-a', label: 'T3 东侧巡检', x: 522, y: 398 },
+    { id: 'patrol-b', label: '到达层巡检', x: 608, y: 446 },
+    { id: 'patrol-c', label: 'P2 巡检岗', x: 846, y: 404 },
+  ];
+
+  const personnelMarkup = transportLayerState.patrolPersonnel
+    ? patrolPersonnelPoints
+        .map(
+          (point) => `
+            <g class="scene-patrol scene-patrol--personnel" transform="translate(${point.x} ${point.y})">
+              <circle class="scene-patrol__ring" r="12"></circle>
+              <circle class="scene-patrol__core" r="4.5"></circle>
+              <text class="scene-patrol__label" x="16" y="4">${point.label}</text>
+            </g>
+          `,
+        )
+        .join('')
+    : '';
+
+  const patrolVehicleLayer = OVERVIEW_TRANSPORT_LAYERS.find((layer) => layer.id === 'patrolVehicle');
+  const vehicleMarkup =
+    transportLayerState.patrolVehicle && patrolVehicleLayer
+      ? patrolVehicleLayer.streams
+          .flatMap((stream) => {
+            const road = mapAssets.roads.find((item) => item.id === stream.roadId);
+            if (!road) {
+              return [];
+            }
+
+            return Array.from({ length: stream.count }).map(
+              (_, index) => `
+                <circle class="scene-vehicle scene-vehicle--overview scene-vehicle--patrol" r="${stream.radius}">
+                  <animateMotion
+                    dur="${Math.max(3, 8 - stream.speed * 1.4)}s"
+                    begin="${(stream.offset + index * 0.9).toFixed(2)}s"
+                    repeatCount="indefinite"
+                    path="${road.path}"
+                  />
+                </circle>
+              `,
+            );
+          })
+          .join('')
+      : '';
+
+  return `${personnelMarkup}${vehicleMarkup}`;
+}
+
+function renderSimulatedGisLayer(mapAssets) {
+  const { width, height } = mapAssets.viewport;
+  const gridStep = 100;
+  const verticalLines = [];
+  const horizontalLines = [];
+  const xLabels = [];
+  const yLabels = [];
+
+  for (let x = gridStep; x < width; x += gridStep) {
+    verticalLines.push(`<line x1="${x}" y1="0" x2="${x}" y2="${height}"></line>`);
+    xLabels.push(`<text x="${x + 6}" y="24">X${String(x).padStart(4, '0')}</text>`);
+  }
+
+  for (let y = gridStep; y < height; y += gridStep) {
+    horizontalLines.push(`<line x1="0" y1="${y}" x2="${width}" y2="${y}"></line>`);
+    yLabels.push(`<text x="14" y="${y - 6}">Y${String(y).padStart(4, '0')}</text>`);
+  }
+
+  const regionBounds = mapAssets.regions
+    .map((region) => {
+      const { x, y, width: regionWidth, height: regionHeight, depth, skew } = region.shape;
+      const boundX = x - 16;
+      const boundY = y - depth - 16;
+      const boundWidth = regionWidth + skew + 32;
+      const boundHeight = regionHeight + depth + 32;
+
+      return `
+        <g class="scene-gis__feature" transform="translate(${boundX} ${boundY})">
+          <rect width="${boundWidth}" height="${boundHeight}" rx="18"></rect>
+          <text x="14" y="18">${region.id}</text>
+        </g>
+      `;
+    })
+    .join('');
+
+  return `
+    <g class="scene-gis" aria-hidden="true">
+      <rect class="scene-gis__frame" x="10" y="10" width="${width - 20}" height="${height - 20}" rx="26"></rect>
+      <g class="scene-gis__grid">
+        ${verticalLines.join('')}
+        ${horizontalLines.join('')}
+      </g>
+      <g class="scene-gis__coords scene-gis__coords--x">
+        ${xLabels.join('')}
+      </g>
+      <g class="scene-gis__coords scene-gis__coords--y">
+        ${yLabels.join('')}
+      </g>
+      <g class="scene-gis__features">
+        ${regionBounds}
+      </g>
+      <g class="scene-gis__north" transform="translate(${width - 72} 70)">
+        <circle r="22"></circle>
+        <path d="M 0 -14 L 8 8 L 0 4 L -8 8 Z"></path>
+        <text x="0" y="34">N</text>
+      </g>
+      <g class="scene-gis__corner-labels">
+        <text x="36" y="${height - 26}">GIS OVERLAY / VECTOR REFERENCE</text>
+        <text x="${width - 208}" y="${height - 26}">CAPITAL AIRPORT PUBLIC ZONE</text>
+      </g>
+    </g>
+  `;
+}
+
+function renderOverviewExerciseLayer(mapAssets, focusRegion, overviewExercise) {
+  if (!overviewExercise) {
+    return '';
+  }
+
+  const commandCenter = mapAssets.regions.find((item) => item.id === 'command-center');
+  const focusPoint = focusRegion?.label ?? { x: 540, y: 420 };
+  const commandPoint = commandCenter?.label ?? { x: 582, y: 110 };
+  const vehicleOrigin = { x: 168, y: 328 };
+  const responsePoint = { x: focusPoint.x - 26, y: focusPoint.y + 14 };
+  const vehiclePoint = { x: focusPoint.x + 22, y: focusPoint.y + 30 };
+  const triggerPoint = { x: focusPoint.x + 92, y: focusPoint.y - 12 };
+  const stepIndex = overviewExercise.stepIndex ?? 0;
+  const roleConfig = overviewExercise.roleConfig ?? {};
+  const pathConfig = overviewExercise.pathConfig ?? {};
+  const personnelLabel = `${roleConfig.personnelCount ?? 0} 名巡检人员`;
+  const vehicleLabel = `${roleConfig.vehicleCount ?? 0} 辆巡检车辆`;
+  const personnelPathLabel = shortenExerciseLabel(pathConfig.personnelPath ?? '步巡路径待生成');
+  const vehiclePathLabel = shortenExerciseLabel(pathConfig.vehiclePath ?? '车巡路径待生成');
+
+  const personnelPath = `M ${commandPoint.x} ${commandPoint.y} C ${commandPoint.x - 18} ${commandPoint.y + 120}, ${responsePoint.x - 48} ${responsePoint.y - 82}, ${responsePoint.x} ${responsePoint.y}`;
+  const vehiclePath = `M ${vehicleOrigin.x} ${vehicleOrigin.y} C ${vehicleOrigin.x + 140} ${vehicleOrigin.y + 56}, ${vehiclePoint.x - 96} ${vehiclePoint.y + 14}, ${vehiclePoint.x} ${vehiclePoint.y}`;
+
+  return `
+    <g class="scene-exercise">
+      <g class="scene-event ${stepIndex >= 0 ? 'is-active' : ''}" transform="translate(${triggerPoint.x} ${triggerPoint.y})">
+        <circle class="scene-event__ring" r="20"></circle>
+        <circle class="scene-event__core" r="8"></circle>
+        <text class="scene-event__label" x="24" y="4">事件触发</text>
+      </g>
+
+      ${
+        stepIndex >= 1
+          ? `
+            <g class="scene-role scene-role--personnel" transform="translate(${commandPoint.x} ${commandPoint.y + 18})">
+              <circle class="scene-role__core" r="8"></circle>
+              <text class="scene-role__label" x="18" y="4">${personnelLabel}</text>
+            </g>
+            <g class="scene-role scene-role--vehicle" transform="translate(${vehicleOrigin.x} ${vehicleOrigin.y})">
+              <rect class="scene-role__vehicle" x="-9" y="-6" width="18" height="12" rx="4"></rect>
+              <text class="scene-role__label" x="18" y="4">${vehicleLabel}</text>
+            </g>
+          `
+          : ''
+      }
+
+      ${
+        stepIndex >= 2
+          ? `
+            <g class="scene-route scene-route--exercise is-active">
+              <path class="scene-route__path" d="${personnelPath}"></path>
+            </g>
+            <g class="scene-route scene-route--exercise is-active">
+              <path class="scene-route__path" d="${vehiclePath}"></path>
+            </g>
+            <text class="scene-route__label" x="${responsePoint.x - 78}" y="${responsePoint.y - 18}">${personnelPathLabel}</text>
+            <text class="scene-route__label" x="${vehiclePoint.x - 36}" y="${vehiclePoint.y + 34}">${vehiclePathLabel}</text>
+            <circle class="scene-vehicle scene-vehicle--overview scene-vehicle--patrol" r="5.2">
+              <animateMotion dur="3.8s" repeatCount="indefinite" path="${vehiclePath}" />
+            </circle>
+            <circle class="scene-patrol__core" r="4.6">
+              <animateMotion dur="4.4s" repeatCount="indefinite" path="${personnelPath}" />
+            </circle>
+          `
+          : ''
+      }
+
+      ${
+        stepIndex >= 3
+          ? `
+            <g class="scene-status-banner" transform="translate(${focusPoint.x - 48} ${focusPoint.y - 54})">
+              <rect width="146" height="30" rx="15"></rect>
+              <text x="73" y="20">状态变化 / 处置中</text>
+            </g>
+          `
+          : ''
+      }
+
+      ${
+        stepIndex >= 4
+          ? `
+            <g class="scene-result-card" transform="translate(${focusPoint.x + 78} ${focusPoint.y + 40})">
+              <rect width="190" height="68" rx="18"></rect>
+              <text x="18" y="24">结果回显</text>
+              <text class="scene-result-card__detail" x="18" y="46">${personnelLabel} / ${vehicleLabel}</text>
+            </g>
+          `
+          : ''
+      }
+    </g>
+  `;
+}
+
+function shortenExerciseLabel(label) {
+  const text = String(label ?? '').trim();
+  if (text.length <= 18) {
+    return text;
+  }
+
+  return `${text.slice(0, 18)}…`;
 }
 
 function buildFocusViewBox(region, viewport) {

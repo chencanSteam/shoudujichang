@@ -12,6 +12,31 @@ const PAGE_REGISTRY = {
   traffic: renderTrafficPage,
 };
 
+const DIRECTOR_STEPS = ['发现异常', '进入应急推演', '进入交通仿真', '回到监测大厅'];
+
+const OVERVIEW_EXERCISE_STEPS = [
+  {
+    label: '事件触发',
+    narration: '系统在监测大厅识别到重点区域异常，形成可联动的演练事件。',
+  },
+  {
+    label: '角色响应',
+    narration: '巡检人员和巡检车辆接警响应，进入现场处置准备状态。',
+  },
+  {
+    label: '路径执行',
+    narration: '巡检角色按预设路径赶赴目标区域，执行到场和接近动作。',
+  },
+  {
+    label: '状态变化',
+    narration: '现场状态从异常转为处置中，重点区域进入持续联动监测。',
+  },
+  {
+    label: '结果回显',
+    narration: '演练结果回显响应时长、到位状态和处置闭环，用于后续推演复盘。',
+  },
+];
+
 export async function createApp(root) {
   const data = await loadMockData();
   const state = createState(data);
@@ -25,6 +50,7 @@ export async function createApp(root) {
 
     if (route.page !== 'overview') {
       state.ui.scriptPanelOpen = false;
+      stopOverviewExercise(state, { reset: true });
     }
 
     const needsShellRender =
@@ -49,9 +75,9 @@ export async function createApp(root) {
       root.innerHTML = renderShell(route, state);
       bindGlobalChrome(root, data, state, render);
     } else {
-      const stage = root.querySelector('.page-stage');
-      if (stage) {
-        stage.className = `page-stage page-stage--${route.page}`;
+      const stageNode = root.querySelector('.page-stage');
+      if (stageNode) {
+        stageNode.className = `page-stage page-stage--${route.page}`;
       }
     }
 
@@ -85,6 +111,7 @@ function createState(data) {
       alertId: data.alerts[0]?.id ?? null,
       videoId: data.videos[0]?.id ?? null,
       regionId: data.mapAssets.regions[0]?.id ?? null,
+      deviceId: null,
       emergencyScenarioId: data.emergencyScenarios[0]?.id ?? null,
       trafficScenarioId: data.trafficScenarios[0]?.id ?? null,
     },
@@ -105,11 +132,15 @@ function createState(data) {
       headerCollapsed: true,
       directorCollapsed: true,
       scriptPanelOpen: false,
+      mapSearchOpen: false,
+      searchResultContext: null,
       overviewTransportLayers: {
         airportBus: true,
         taxi: true,
         rideHailing: true,
         privateCar: true,
+        patrolPersonnel: true,
+        patrolVehicle: true,
       },
     },
     demo: {
@@ -119,10 +150,25 @@ function createState(data) {
       log: [
         {
           time: '14:35:00',
-          text: '导演台已接入，支持监测大厅、应急推演、交通仿真三页联动。',
+          text: '导演台已接入，支持监测大厅、应急仿真、交通仿真三页联动。',
         },
       ],
       timers: [],
+    },
+    overviewExercise: {
+      playing: false,
+      stepIndex: 0,
+      timer: null,
+      roleConfig: {
+        personnelCount: 2,
+        personnelStatus: '1 组出发',
+        vehicleCount: 1,
+        vehicleStatus: '路线已下发',
+      },
+      pathConfig: {
+        personnelPath: '监测大厅 -> 目标区域',
+        vehiclePath: '外环主路 -> 到达接驳口',
+      },
     },
     runtime: {
       now: new Date('2026-04-21T14:35:00+08:00'),
@@ -133,6 +179,10 @@ function createState(data) {
 }
 
 function renderShell(route, state) {
+  const headerToggleLabel = state.ui.headerCollapsed ? '展开顶部导航' : '隐藏顶部导航';
+  const directorInlineLabel = state.ui.directorCollapsed ? '展开导演台' : '收起导演台';
+  const directorFloatingLabel = state.ui.directorCollapsed ? '展开导演台' : '隐藏导演台';
+
   return `
     <div class="app-shell ${state.ui.headerCollapsed ? 'is-chrome-collapsed' : ''} ${state.ui.directorCollapsed ? 'is-director-collapsed' : ''}">
       <header class="topbar">
@@ -148,9 +198,9 @@ function renderShell(route, state) {
         </div>
         <nav class="topbar__nav" aria-label="页面导航">
           ${[
-            ['overview', '监测大厅总览页'],
-            ['emergency', '应急仿真页'],
-            ['traffic', '公共区交通仿真页'],
+            ['overview', '监测大厅'],
+            ['emergency', '应急仿真'],
+            ['traffic', '公共区交通仿真'],
           ]
             .map(
               ([page, label]) => `
@@ -195,7 +245,7 @@ function renderShell(route, state) {
               ${state.demo.playing ? '停止自动演示' : '开始自动演示'}
             </button>
             <button class="director-toggle director-toggle--inline" type="button" data-toggle-director aria-pressed="${state.ui.directorCollapsed}">
-              ${state.ui.directorCollapsed ? '展开导演台' : '收起导演台'}
+              ${directorInlineLabel}
             </button>
           </div>
         </div>
@@ -210,15 +260,16 @@ function renderShell(route, state) {
         data-toggle-header
         aria-pressed="${state.ui.headerCollapsed}"
       >
-        ${state.ui.headerCollapsed ? '展开顶部导航' : '隐藏顶部导航'}
+        ${headerToggleLabel}
       </button>
+
       <button
         class="director-toggle director-toggle--floating"
         type="button"
         data-toggle-director
         aria-pressed="${state.ui.directorCollapsed}"
       >
-        ${state.ui.directorCollapsed ? '展开导演台' : '隐藏导演台'}
+        ${directorFloatingLabel}
       </button>
 
       <div class="js-script-layer-slot"></div>
@@ -350,6 +401,7 @@ function updateScriptLayer(root, data, route, state) {
 
   const shell = root.querySelector('.app-shell');
   if (route.page !== 'overview') {
+    stopOverviewExercise(state, { reset: true });
     slot.innerHTML = '';
     shell?.classList.remove('is-script-open');
     return;
@@ -360,12 +412,64 @@ function updateScriptLayer(root, data, route, state) {
 
   slot.querySelector('[data-toggle-script]')?.addEventListener('click', () => {
     state.ui.scriptPanelOpen = !state.ui.scriptPanelOpen;
-    updateScriptLayer(root, data, route, state);
+    if (!state.ui.scriptPanelOpen) {
+      stopOverviewExercise(state, { reset: true });
+    }
+    syncOverviewExercise(root, data, route, state);
+  });
+
+  slot.querySelector('[data-overview-exercise-play]')?.addEventListener('click', () => {
+    startOverviewExercise(root, data, route, state);
+  });
+
+  slot.querySelector('[data-overview-exercise-pause]')?.addEventListener('click', () => {
+    stopOverviewExercise(state);
+    syncOverviewExercise(root, data, route, state);
+  });
+
+  slot.querySelector('[data-overview-exercise-reset]')?.addEventListener('click', () => {
+    stopOverviewExercise(state, { reset: true });
+    syncOverviewExercise(root, data, route, state);
+  });
+
+  slot.querySelector('[data-overview-exercise-close]')?.addEventListener('click', () => {
+    state.ui.scriptPanelOpen = false;
+    stopOverviewExercise(state, { reset: true });
+    syncOverviewExercise(root, data, route, state);
+  });
+
+  slot.querySelectorAll('[data-exercise-role-number]').forEach((input) => {
+    input.addEventListener('change', () => {
+      const key = input.dataset.exerciseRoleNumber;
+      const nextValue = Math.max(0, Number(input.value) || 0);
+      state.overviewExercise.roleConfig[key] = nextValue;
+      syncOverviewExercise(root, data, route, state);
+    });
+  });
+
+  slot.querySelectorAll('[data-exercise-role-text]').forEach((input) => {
+    input.addEventListener('change', () => {
+      const key = input.dataset.exerciseRoleText;
+      state.overviewExercise.roleConfig[key] =
+        sanitizeExerciseInput(input.value.trim()) || input.defaultValue;
+      syncOverviewExercise(root, data, route, state);
+    });
+  });
+
+  slot.querySelectorAll('[data-exercise-path-text]').forEach((input) => {
+    input.addEventListener('change', () => {
+      const key = input.dataset.exercisePathText;
+      state.overviewExercise.pathConfig[key] =
+        sanitizeExerciseInput(input.value.trim()) || input.defaultValue;
+      syncOverviewExercise(root, data, route, state);
+    });
   });
 }
 
 function renderScriptLayer(data, route, state) {
-  const script = buildOverviewScript(data, route, state);
+  const exercise = buildOverviewExercise(data, route, state);
+  const roleConfig = state.overviewExercise.roleConfig;
+  const pathConfig = state.overviewExercise.pathConfig;
 
   return `
     <div class="overview-script-layer ${state.ui.scriptPanelOpen ? 'is-open' : ''}">
@@ -375,37 +479,101 @@ function renderScriptLayer(data, route, state) {
         data-toggle-script
         aria-pressed="${state.ui.scriptPanelOpen}"
       >
-        ${state.ui.scriptPanelOpen ? '收起演示脚本' : '打开演示脚本'}
+        ${state.ui.scriptPanelOpen ? '关闭仿真演练' : '打开仿真演练'}
       </button>
       <section class="overview-script-panel">
         <div class="overview-script-panel__header">
           <div>
-            <span class="panel-kicker">演示脚本</span>
-            <strong>${script.title}</strong>
+            <span class="panel-kicker">仿真演练</span>
+            <strong>${exercise.title}</strong>
           </div>
-          <span class="script-chip">${script.stepLabel}</span>
+          <span class="script-chip">${exercise.stepLabel}</span>
+        </div>
+        <div class="control-row overview-exercise-controls">
+          <button class="action-button" type="button" data-overview-exercise-play>
+            ${exercise.playButtonLabel}
+          </button>
+          <button class="action-button action-button--ghost" type="button" data-overview-exercise-pause>
+            暂停
+          </button>
+          <button class="action-button action-button--ghost" type="button" data-overview-exercise-reset>
+            重置
+          </button>
+          <button class="action-button action-button--ghost" type="button" data-overview-exercise-close>
+            关闭
+          </button>
+        </div>
+        <div class="exercise-step-strip">
+          ${OVERVIEW_EXERCISE_STEPS.map(
+            (step, index) => `
+              <span class="exercise-step ${index <= state.overviewExercise.stepIndex ? 'is-active' : ''}">
+                ${String(index + 1).padStart(2, '0')} ${step.label}
+              </span>
+            `,
+          ).join('')}
         </div>
         <div class="overview-script-panel__grid">
           <article class="script-block">
-            <span>当前讲解要点</span>
-            <strong>${script.currentTopic}</strong>
-            <p>${script.currentNarration}</p>
+            <span>事件触发</span>
+            <strong>${exercise.eventTitle}</strong>
+            <p>${exercise.eventDetail}</p>
           </article>
           <article class="script-block">
-            <span>当前焦点对象</span>
-            <strong>${script.focusTitle}</strong>
-            <p>${script.focusDetail}</p>
+            <span>角色响应</span>
+            <strong>${exercise.roleTitle}</strong>
+            <div class="exercise-edit-grid">
+              <label class="exercise-edit-field">
+                <span>巡检人员数量</span>
+                <input type="number" min="0" step="1" value="${roleConfig.personnelCount}" data-exercise-role-number="personnelCount" />
+              </label>
+              <label class="exercise-edit-field">
+                <span>巡检人员状态</span>
+                <input type="text" value="${escapeAttribute(roleConfig.personnelStatus)}" data-exercise-role-text="personnelStatus" />
+              </label>
+              <label class="exercise-edit-field">
+                <span>巡检车辆数量</span>
+                <input type="number" min="0" step="1" value="${roleConfig.vehicleCount}" data-exercise-role-number="vehicleCount" />
+              </label>
+              <label class="exercise-edit-field">
+                <span>巡检车辆状态</span>
+                <input type="text" value="${escapeAttribute(roleConfig.vehicleStatus)}" data-exercise-role-text="vehicleStatus" />
+              </label>
+            </div>
+            <div class="exercise-status-list">
+              ${exercise.roles
+                .map(
+                  (item) =>
+                    `<div class="exercise-status-line"><span>${item.label}</span><strong>${item.value}</strong></div>`,
+                )
+                .join('')}
+            </div>
           </article>
           <article class="script-block">
-            <span>推荐讲解顺序</span>
-            <ol class="script-sequence">
-              ${script.sequence.map((item) => `<li>${item}</li>`).join('')}
-            </ol>
+            <span>路径执行</span>
+            <strong>${exercise.pathTitle}</strong>
+            <div class="exercise-edit-grid">
+              <label class="exercise-edit-field exercise-edit-field--wide">
+                <span>步巡路径</span>
+                <input type="text" value="${escapeAttribute(pathConfig.personnelPath)}" data-exercise-path-text="personnelPath" />
+              </label>
+              <label class="exercise-edit-field exercise-edit-field--wide">
+                <span>车巡路径</span>
+                <input type="text" value="${escapeAttribute(pathConfig.vehiclePath)}" data-exercise-path-text="vehiclePath" />
+              </label>
+            </div>
+            <div class="exercise-status-list">
+              ${exercise.paths
+                .map(
+                  (item) =>
+                    `<div class="exercise-status-line"><span>${item.label}</span><strong>${item.value}</strong></div>`,
+                )
+                .join('')}
+            </div>
           </article>
           <article class="script-block">
-            <span>建议下一步</span>
-            <strong>${script.nextActionTitle}</strong>
-            <p>${script.nextActionDetail}</p>
+            <span>结果回显</span>
+            <strong>${exercise.resultTitle}</strong>
+            <p>${exercise.resultDetail}</p>
           </article>
         </div>
       </section>
@@ -413,78 +581,111 @@ function renderScriptLayer(data, route, state) {
   `;
 }
 
-function buildOverviewScript(data, route, state) {
+function buildOverviewExercise(data, route, state) {
   const alert = data.alerts.find((item) => item.id === state.selection.alertId) ?? data.alerts[0];
-  const video = data.videos.find((item) => item.id === state.selection.videoId) ?? data.videos[0];
   const region =
     data.mapAssets.regions.find((item) => item.id === state.selection.regionId) ??
     data.mapAssets.regions[0];
-  const terminalId = route.params.get('terminal');
-  const floorId = route.params.get('floor');
-  const terminal = data.terminalDetails?.terminals?.find((item) => item.id === terminalId) ?? null;
-  const floor =
-    terminal?.floors.find((item) => item.id === floorId) ??
-    terminal?.floors.find((item) => item.id === terminal?.defaultFloor) ??
-    null;
-
-  const scripts = [
-    {
-      stepLabel: '步骤 01 / 监测大厅切入',
-      title: '从一张图进入当前场景',
-      currentTopic: '先交代全局态势，再把镜头落到当前异常区域。',
-      currentNarration:
-        '优先讲清一张图总览能力、预警位置、视频资源和重点区域，让听众先建立整体认知。',
-      nextActionTitle: '下一步建议进入应急推演',
-      nextActionDetail: '带着当前预警与联动资源进入应急页，展示从发现问题到处置推演的闭环。',
-    },
-    {
-      stepLabel: '步骤 02 / 应急推演衔接',
-      title: '从发现问题转到处置能力',
-      currentTopic: '解释为什么要从总览页继续钻取到应急场景。',
-      currentNarration:
-        '这里重点强调系统不只是做监测，而是能把预警、视频、资源和处置动作串成一条执行链路。',
-      nextActionTitle: '下一步建议验证交通优化',
-      nextActionDetail: '从处置推演继续落到公共区交通组织，看方案是否真正缓解楼前和停车压力。',
-    },
-    {
-      stepLabel: '步骤 03 / 交通优化验证',
-      title: '展示优化结果如何回流总览',
-      currentTopic: '说明交通方案优化后，如何反馈到总览态势和资源调度中。',
-      currentNarration:
-        '重点讲清方案对楼前上客带、停车区和接驳运力的影响，并将结果反馈回总览页。',
-      nextActionTitle: '下一步建议回到总览闭环',
-      nextActionDetail: '回到监测大厅，展示问题发现、推演处置和交通优化形成的完整闭环。',
-    },
-  ];
-
-  const currentScript = scripts[Math.min(state.demo.stepIndex, scripts.length - 1)];
-  const focusTitle = floor ? `${terminal.name} ${floor.name}` : region.name;
-  const focusDetail = floor
-    ? `${floor.subtitle} 当前关联预警为“${alert.title}”，联动视频为“${video.name}”。`
-    : `${region.description} 当前关联预警为“${alert.title}”，联动视频为“${video.name}”。`;
+  const stepIndex = Math.min(state.overviewExercise.stepIndex, OVERVIEW_EXERCISE_STEPS.length - 1);
+  const currentStep = OVERVIEW_EXERCISE_STEPS[stepIndex];
+  const triggerArea = route.params.get('terminal') ? `${region.name} 楼内联动` : region.name;
+  const roleConfig = state.overviewExercise.roleConfig;
+  const pathConfig = state.overviewExercise.pathConfig;
 
   return {
-    ...currentScript,
-    focusTitle,
-    focusDetail,
-    sequence: [
-      '先用总览页讲清当前运行态势和异常焦点。',
-      '再说明当前焦点关联的视频、资源动作和建议处置。',
-      '最后根据汇报节奏选择进入应急推演或交通仿真页。',
+    title: `${triggerArea} 角色联动演练`,
+    stepLabel: `步骤 ${String(stepIndex + 1).padStart(2, '0')} / ${currentStep.label}`,
+    playButtonLabel: state.overviewExercise.playing
+      ? '演练进行中'
+      : stepIndex > 0
+        ? '继续演练'
+        : '开始演练',
+    eventTitle: alert.title,
+    eventDetail: `${currentStep.narration} 触发区域为 ${triggerArea}，当前预警状态为 ${alert.status}。`,
+    roleTitle: stepIndex >= 1 ? '角色已纳入响应链路' : '等待角色接警',
+    roles: [
+      {
+        label: '巡检人员',
+        value:
+          stepIndex >= 1
+            ? `${roleConfig.personnelCount} 名接警 / ${roleConfig.personnelStatus}`
+            : '待命',
+      },
+      {
+        label: '巡检车辆',
+        value:
+          stepIndex >= 1
+            ? `${roleConfig.vehicleCount} 辆联动 / ${roleConfig.vehicleStatus}`
+            : '待命',
+      },
     ],
+    pathTitle: stepIndex >= 2 ? '处置路径已执行' : '等待路径执行',
+    paths: [
+      {
+        label: '步巡路径',
+        value: stepIndex >= 2 ? pathConfig.personnelPath : '待生成',
+      },
+      {
+        label: '车巡路径',
+        value: stepIndex >= 2 ? pathConfig.vehiclePath : '待生成',
+      },
+    ],
+    resultTitle: stepIndex >= 4 ? '演练闭环已形成' : '结果回显待完成',
+    resultDetail:
+      stepIndex >= 4
+        ? `响应时长 2 分 40 秒，${roleConfig.personnelCount} 名巡检人员与 ${roleConfig.vehicleCount} 辆巡检车辆均已到位，区域状态切换为持续监测。`
+        : '当前阶段结果仍在推演中，完成角色到位和状态切换后将生成闭环回显。',
   };
 }
 
+function syncOverviewExercise(root, data, route, state) {
+  updateScriptLayer(root, data, route, state);
+  window.dispatchEvent(new CustomEvent('overview-exercise-change'));
+}
+
+function stopOverviewExercise(state, { reset = false } = {}) {
+  if (state.overviewExercise.timer) {
+    window.clearInterval(state.overviewExercise.timer);
+    state.overviewExercise.timer = null;
+  }
+
+  state.overviewExercise.playing = false;
+  if (reset) {
+    state.overviewExercise.stepIndex = 0;
+  }
+}
+
+function startOverviewExercise(root, data, route, state) {
+  stopOverviewExercise(state);
+  state.ui.scriptPanelOpen = true;
+  state.overviewExercise.playing = true;
+
+  if (state.overviewExercise.stepIndex >= OVERVIEW_EXERCISE_STEPS.length - 1) {
+    state.overviewExercise.stepIndex = 0;
+  }
+
+  syncOverviewExercise(root, data, route, state);
+
+  state.overviewExercise.timer = window.setInterval(() => {
+    if (state.overviewExercise.stepIndex >= OVERVIEW_EXERCISE_STEPS.length - 1) {
+      stopOverviewExercise(state);
+      syncOverviewExercise(root, data, route, state);
+      return;
+    }
+
+    state.overviewExercise.stepIndex += 1;
+    syncOverviewExercise(root, data, route, state);
+  }, 1800);
+}
+
 function renderDirectorSteps(stepIndex) {
-  return ['发现异常', '进入应急推演', '验证交通优化', '回到总览闭环']
-    .map(
-      (label, index) => `
-        <span class="director-step ${index <= stepIndex ? 'is-active' : ''}">
-          ${String(index + 1).padStart(2, '0')} ${label}
-        </span>
-      `,
-    )
-    .join('');
+  return DIRECTOR_STEPS.map(
+    (label, index) => `
+      <span class="director-step ${index <= stepIndex ? 'is-active' : ''}">
+        ${String(index + 1).padStart(2, '0')} ${label}
+      </span>
+    `,
+  ).join('');
 }
 
 function renderDirectorLog(log) {
@@ -533,7 +734,7 @@ function startDemo(state, render) {
     state.emergency.playing = false;
     state.traffic.progress = 0;
     state.traffic.playing = true;
-    updateDemoCue(state, '切换到交通仿真页，对比基线方案与优化调度方案。');
+    updateDemoCue(state, '切换到交通仿真页，观察公共区交通压力与调度变化。');
     navigate('traffic', {
       scenario: 'optimized-dispatch',
       region: 'parking-p2',
@@ -637,12 +838,24 @@ function updateClock(root, state) {
 
 function getRouteLabel(page) {
   if (page === 'emergency') {
-    return '事件推演模式';
+    return '应急仿真模式';
   }
 
   if (page === 'traffic') {
-    return '交通优化模式';
+    return '交通仿真模式';
   }
 
-  return '总览模式';
+  return '总览监测模式';
+}
+
+function escapeAttribute(value) {
+  return String(value)
+    .replaceAll('&', '&amp;')
+    .replaceAll('"', '&quot;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;');
+}
+
+function sanitizeExerciseInput(value) {
+  return String(value).replaceAll('<', '＜').replaceAll('>', '＞').trim();
 }
