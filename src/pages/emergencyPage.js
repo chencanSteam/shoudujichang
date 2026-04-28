@@ -125,6 +125,57 @@ const EMERGENCY_SCENARIO_CONTENT = {
   },
 };
 
+const EMERGENCY_OPERATION_CONTACTS = [
+  {
+    department: '出租车运营',
+    contact: '李明',
+    role: '出租车调度席',
+    phone: '010-6454-**** / 内线 6201',
+    channel: 'T3 到达层出租车保障群',
+    duty: '负责出租车蓄车、补位窗口和楼前发车节拍联动。',
+  },
+  {
+    department: '机场巴士',
+    contact: '周岚',
+    role: '巴士运行调度',
+    phone: '010-6454-**** / 内线 6202',
+    channel: '机场巴士应急调度群',
+    duty: '负责巴士站台轮转、临时加密班次和摆渡车衔接。',
+  },
+  {
+    department: '网约车保障',
+    contact: '王晨',
+    role: '网约车接驳协调',
+    phone: '010-6454-**** / 内线 6203',
+    channel: 'P2 网约车保障群',
+    duty: '负责网约车上客区排队、P2 引流和平台侧运力响应。',
+  },
+  {
+    department: '地铁联络',
+    contact: '陈昊',
+    role: '轨道交通联络员',
+    phone: '010-6454-**** / 内线 6204',
+    channel: '轨道交通协同群',
+    duty: '负责地铁客流承接、末班车信息同步和站厅限流联动。',
+  },
+  {
+    department: '公交接驳',
+    contact: '赵宁',
+    role: '公交运力协调',
+    phone: '010-6454-**** / 内线 6205',
+    channel: '公交接驳保障群',
+    duty: '负责公交临时加车、站点排队秩序和外围疏散协同。',
+  },
+  {
+    department: '综合交通枢纽',
+    contact: '刘洋',
+    role: '现场值班负责人',
+    phone: '010-6454-**** / 内线 6200',
+    channel: '公共区交通联动总群',
+    duty: '负责跨部门升级、资源统筹和应急推演口径确认。',
+  },
+];
+
 export function renderEmergencyPage({ data, route, state, navigate }) {
   const scenarios = data.emergencyScenarios.map((item) => normalizeScenario(item));
   const scenario = resolveScenario(scenarios, route, state);
@@ -317,6 +368,19 @@ export function renderEmergencyPage({ data, route, state, navigate }) {
               </div>
             </section>
           </aside>
+
+          <section class="panel panel--footer emergency-contacts emergency-contacts--compact reveal" style="animation-delay: 220ms;">
+            <div class="panel-heading">
+              <div>
+                <span class="panel-kicker">运营联络</span>
+                <h3>应急保障部门值班通讯录</h3>
+              </div>
+              <span class="contact-standby">24h 值守</span>
+            </div>
+            <div class="emergency-contact-grid">
+              ${renderEmergencyContacts()}
+            </div>
+          </section>
         </div>
       </section>
     `,
@@ -489,6 +553,28 @@ function renderEmergencyMetrics(scenario, progress) {
       `;
     })
     .join('');
+}
+
+function renderEmergencyContacts() {
+  return EMERGENCY_OPERATION_CONTACTS.map(
+    (item) => `
+      <article class="contact-card">
+        <div class="contact-card__head">
+          <span class="contact-card__department">${item.department}</span>
+          <span class="contact-card__role">${item.role}</span>
+        </div>
+        <strong>${item.contact}</strong>
+        <div class="contact-card__line">
+          <span>值班电话</span>
+          <b>${item.phone}</b>
+        </div>
+        <div class="contact-card__line">
+          <span>联络渠道</span>
+          <b>${item.channel}</b>
+        </div>
+      </article>
+    `,
+  ).join('');
 }
 
 function createFlowOption(scenario, progress) {

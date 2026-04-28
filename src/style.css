@@ -907,6 +907,7 @@ button {
 .control-row,
 .video-list,
 .map-caption,
+.emergency-contact-grid,
 .mini-metrics,
 .compare-board,
 .metric-column,
@@ -2613,6 +2614,132 @@ button {
   border: 1px solid rgba(124, 201, 255, 0.1);
 }
 
+.emergency-contacts {
+  align-self: start;
+}
+
+.emergency-contacts--compact {
+  padding: 14px 16px;
+  border-radius: 22px;
+  background:
+    linear-gradient(180deg, rgba(10, 25, 50, 0.78), rgba(7, 18, 38, 0.66)),
+    radial-gradient(circle at top right, rgba(85, 170, 255, 0.08), transparent 38%);
+}
+
+.emergency-contacts--compact .panel-heading {
+  margin-bottom: 10px;
+}
+
+.emergency-contacts--compact h3 {
+  font-size: 0.92rem;
+}
+
+.contact-standby {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 9px;
+  border-radius: 999px;
+  border: 1px solid rgba(152, 232, 125, 0.22);
+  background: rgba(44, 76, 36, 0.38);
+  color: #dfffd4;
+  font-size: 0.72rem;
+}
+
+.contact-standby::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--success);
+  box-shadow: 0 0 12px rgba(152, 232, 125, 0.84);
+}
+
+.emergency-contact-grid {
+  position: relative;
+  z-index: 1;
+  grid-template-columns: repeat(6, minmax(142px, 1fr));
+  gap: 8px;
+}
+
+.contact-card {
+  min-width: 0;
+  padding: 10px 11px;
+  border-radius: 14px;
+  border: 1px solid rgba(124, 201, 255, 0.1);
+  background:
+    linear-gradient(180deg, rgba(11, 31, 60, 0.48), rgba(8, 22, 43, 0.38)),
+    radial-gradient(circle at top left, rgba(82, 212, 255, 0.08), transparent 58%);
+}
+
+.contact-card__head,
+.contact-card__line {
+  display: flex;
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.contact-card__head {
+  margin-bottom: 8px;
+}
+
+.contact-card__department {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 7px;
+  border-radius: 999px;
+  border: 1px solid rgba(124, 201, 255, 0.16);
+  background: rgba(8, 21, 42, 0.58);
+  color: var(--accent-strong);
+  font-size: 0.7rem;
+}
+
+.contact-card__role,
+.contact-card__line span,
+.contact-card p {
+  color: var(--text-soft);
+}
+
+.contact-card__role {
+  font-size: 0.7rem;
+}
+
+.contact-card strong {
+  display: block;
+  margin-bottom: 8px;
+  color: #f3fdff;
+  font-family: var(--font-display);
+  font-size: 0.96rem;
+  letter-spacing: 0.04em;
+}
+
+.contact-card__line {
+  padding: 6px 0;
+  border-top: 1px solid rgba(124, 201, 255, 0.08);
+}
+
+.contact-card__line span {
+  font-size: 0.68rem;
+}
+
+.contact-card__line b {
+  min-width: 0;
+  text-align: left;
+  color: #e8fbff;
+  font-family: 'Bahnschrift', 'DIN Alternate', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.contact-card p {
+  margin: 10px 0 0;
+  line-height: 1.55;
+}
+
 .compare-board {
   grid-template-columns: 1fr;
 }
@@ -2848,6 +2975,10 @@ button {
     grid-template-columns: 1fr;
   }
 
+  .emergency-contact-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .quick-actions {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -2936,6 +3067,20 @@ button {
 
   .metric-grid {
     grid-template-columns: 1fr;
+  }
+
+  .emergency-contact-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .contact-card__head,
+  .contact-card__line {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .contact-card__line b {
+    text-align: left;
   }
 
   .quick-actions,
