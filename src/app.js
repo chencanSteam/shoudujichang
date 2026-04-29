@@ -118,6 +118,10 @@ function createState(data) {
     emergency: {
       progress: 0,
       playing: false,
+      planEditorOpen: false,
+      activePlanByScenario: {},
+      savedPlans: [],
+      planDrafts: {},
     },
     traffic: {
       progress: 0,

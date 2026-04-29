@@ -908,6 +908,9 @@ button {
 .video-list,
 .map-caption,
 .emergency-contact-grid,
+.emergency-plan-form,
+.emergency-step-form,
+.emergency-saved-plan-strip,
 .mini-metrics,
 .compare-board,
 .metric-column,
@@ -1737,6 +1740,30 @@ button {
   stroke-dasharray: 8 10;
 }
 
+.scene-route--vehicle .scene-route__path {
+  stroke: rgba(173, 255, 126, 0.64);
+}
+
+.scene-route--material .scene-route__path {
+  stroke: rgba(244, 178, 89, 0.64);
+}
+
+.scene-material rect {
+  fill: rgba(244, 178, 89, 0.86);
+  stroke: rgba(255, 230, 191, 0.36);
+  filter: drop-shadow(0 0 10px rgba(244, 178, 89, 0.28));
+}
+
+.scene-material-runner {
+  fill: rgba(244, 178, 89, 0.95);
+  filter: drop-shadow(0 0 8px rgba(244, 178, 89, 0.38));
+}
+
+.scene-material text {
+  fill: rgba(255, 245, 226, 0.92);
+  font-size: 11px;
+}
+
 .scene-status-banner rect {
   fill: rgba(7, 31, 54, 0.82);
   stroke: rgba(135, 231, 255, 0.24);
@@ -1975,6 +2002,128 @@ button {
     linear-gradient(180deg, rgba(7, 17, 35, 0.96), rgba(2, 8, 18, 0.92));
 }
 
+.scene-frame--reference-exercise {
+  background:
+    radial-gradient(circle at 40% 20%, rgba(246, 204, 92, 0.1), transparent 28%),
+    linear-gradient(180deg, rgba(14, 25, 24, 0.96), rgba(5, 13, 16, 0.94));
+}
+
+.scene-frame--reference-exercise .airport-scene {
+  animation: aerialCameraDrift 12s ease-in-out infinite alternate;
+  transform-origin: center;
+}
+
+.scene-frame--reference-exercise .scene-hud {
+  background: rgba(2, 10, 16, 0.54);
+  border-color: rgba(255, 213, 91, 0.18);
+}
+
+.scene-reference-title {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  z-index: 3;
+  display: grid;
+  justify-items: center;
+  gap: 3px;
+  min-width: 260px;
+  transform: translateX(-50%);
+  color: #fff4a8;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.72);
+  pointer-events: none;
+}
+
+.scene-reference-title span {
+  color: rgba(255, 239, 154, 0.72);
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+}
+
+.scene-reference-title strong {
+  font-size: 0.98rem;
+  letter-spacing: 0.12em;
+}
+
+.scene-reference-panel {
+  position: absolute;
+  top: 64px;
+  left: 14px;
+  z-index: 3;
+  width: min(270px, 31%);
+  padding: 12px;
+  border: 1px solid rgba(255, 214, 92, 0.2);
+  background:
+    linear-gradient(180deg, rgba(20, 24, 18, 0.78), rgba(10, 14, 14, 0.62)),
+    repeating-linear-gradient(180deg, rgba(255, 210, 72, 0.08) 0 1px, transparent 1px 32px);
+  box-shadow: 0 18px 38px rgba(0, 0, 0, 0.22);
+  color: rgba(255, 246, 202, 0.9);
+  pointer-events: none;
+}
+
+.scene-reference-panel__head {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.scene-reference-panel__head span {
+  color: rgba(255, 224, 90, 0.78);
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+}
+
+.scene-reference-panel__head strong,
+.scene-reference-row em,
+.scene-reference-row strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.scene-reference-panel p {
+  margin: 0 0 9px;
+  color: rgba(255, 248, 214, 0.72);
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+
+.scene-reference-panel__list {
+  display: grid;
+  gap: 5px;
+}
+
+.scene-reference-row {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 5px 7px;
+  border-left: 3px solid rgba(255, 211, 83, 0.72);
+  background: rgba(122, 102, 22, 0.28);
+  font-size: 0.7rem;
+}
+
+.scene-reference-row b {
+  color: rgba(255, 232, 124, 0.9);
+  font-weight: 700;
+}
+
+.scene-reference-row em {
+  color: rgba(255, 248, 218, 0.8);
+  font-style: normal;
+}
+
+.scene-reference-row strong {
+  color: #fff2a8;
+  font-family: 'Bahnschrift', 'DIN Alternate', sans-serif;
+}
+
+.scene-reference-empty {
+  color: rgba(255, 248, 218, 0.62);
+  font-size: 0.72rem;
+}
+
 .scene-focus-mask {
   position: absolute;
   inset: 0;
@@ -2114,8 +2263,16 @@ button {
   fill: rgba(4, 12, 22, 0.96);
 }
 
+.scene-frame--reference-exercise .scene-bg {
+  fill: rgba(16, 28, 23, 0.98);
+}
+
 .scene-halo {
   fill: rgba(17, 68, 132, 0.22);
+}
+
+.scene-frame--reference-exercise .scene-halo {
+  opacity: 0.18;
 }
 
 .scene-halo--secondary {
@@ -2125,6 +2282,43 @@ button {
 .scene-gis {
   opacity: 0.88;
   pointer-events: none;
+}
+
+.scene-aerial-texture {
+  opacity: 0.92;
+  pointer-events: none;
+}
+
+.scene-aerial-texture rect {
+  fill: rgba(70, 88, 54, 0.42);
+}
+
+.scene-aerial-texture__forest {
+  fill: rgba(39, 82, 54, 0.62);
+}
+
+.scene-aerial-texture__forest--right {
+  fill: rgba(31, 70, 50, 0.68);
+}
+
+.scene-aerial-texture__field {
+  fill: rgba(106, 103, 65, 0.42);
+}
+
+.scene-aerial-texture__service-road {
+  fill: none;
+  stroke: rgba(210, 198, 150, 0.38);
+  stroke-width: 34;
+  stroke-linecap: round;
+}
+
+.scene-aerial-texture__service-road--secondary {
+  stroke: rgba(164, 176, 142, 0.24);
+  stroke-width: 22;
+}
+
+.scene-frame--reference-exercise .scene-gis {
+  opacity: 0.48;
 }
 
 .scene-gis__frame {
@@ -2206,6 +2400,22 @@ button {
   stroke: rgba(255, 107, 107, 0.9);
 }
 
+.scene-frame--reference-exercise .road-layer__shadow {
+  stroke: rgba(12, 16, 10, 0.34);
+}
+
+.scene-frame--reference-exercise .road-layer__base {
+  stroke: rgba(216, 204, 158, 0.38);
+}
+
+.scene-frame--reference-exercise .road-layer__flow {
+  stroke: rgba(244, 210, 83, 0.52);
+}
+
+.scene-frame--reference-exercise .road-layer__label {
+  fill: rgba(255, 235, 148, 0.62);
+}
+
 .road-layer__label,
 .scene-region__label,
 .scene-route__label {
@@ -2230,6 +2440,23 @@ button {
 .scene-region__front,
 .scene-region__side {
   opacity: 0.68;
+}
+
+.scene-frame--reference-exercise .scene-region__top {
+  opacity: 0.7;
+  filter: saturate(0.82);
+}
+
+.scene-frame--reference-exercise .scene-region__front,
+.scene-frame--reference-exercise .scene-region__side {
+  opacity: 0.44;
+}
+
+.scene-frame--reference-exercise .scene-region__label {
+  fill: rgba(226, 247, 255, 0.72);
+  paint-order: stroke;
+  stroke: rgba(4, 11, 12, 0.82);
+  stroke-width: 3px;
 }
 
 .scene-region--terminal .scene-region__top {
@@ -2367,6 +2594,375 @@ button {
   stroke: rgba(252, 214, 105, 0.95);
   stroke-dasharray: 10 12;
   animation: stream 6s linear infinite;
+}
+
+.scene-plan-origin {
+  opacity: 0;
+  animation: planOriginReady 420ms ease forwards;
+  animation-delay: var(--task-delay, 0s);
+}
+
+.scene-plan-route {
+  opacity: 1;
+}
+
+.scene-plan-route .scene-plan-route__corridor {
+  opacity: 0;
+  stroke-width: 16;
+  stroke-dasharray: none;
+  stroke-linecap: round;
+  animation: planCorridorReveal 520ms ease forwards;
+  animation-delay: var(--task-delay, 0s);
+}
+
+.scene-plan-route .scene-plan-route__draw {
+  stroke-width: 2.6;
+  stroke-dasharray: 1 1;
+  stroke-dashoffset: 1;
+  animation: planRouteDraw var(--route-dur, 3.5s) ease-out forwards;
+  animation-delay: var(--task-delay, 0s);
+}
+
+.scene-plan-route .scene-plan-route__flow {
+  opacity: 0;
+  stroke-width: 1.8;
+  stroke-dasharray: 7 13;
+  animation:
+    planRouteFlowReveal 360ms ease forwards,
+    stream 7.5s linear infinite;
+  animation-delay: calc(var(--task-delay, 0s) + 620ms), calc(var(--task-delay, 0s) + 620ms);
+}
+
+.scene-route--personnel .scene-plan-route__draw,
+.scene-route--personnel .scene-plan-route__flow {
+  stroke: rgba(149, 229, 255, 0.7);
+}
+
+.scene-route--personnel .scene-plan-route__corridor {
+  stroke: rgba(76, 214, 255, 0.22);
+}
+
+.scene-route--vehicle .scene-plan-route__draw,
+.scene-route--vehicle .scene-plan-route__flow {
+  stroke: rgba(173, 255, 126, 0.7);
+}
+
+.scene-route--vehicle .scene-plan-route__corridor {
+  stroke: rgba(255, 168, 45, 0.26);
+}
+
+.scene-route--material .scene-plan-route__draw,
+.scene-route--material .scene-plan-route__flow {
+  stroke: rgba(244, 178, 89, 0.68);
+}
+
+.scene-route--material .scene-plan-route__corridor {
+  stroke: rgba(255, 211, 83, 0.22);
+}
+
+.scene-plan-runner {
+  opacity: 0;
+  animation: planRunnerEnter 320ms ease forwards;
+  animation-delay: var(--runner-begin, 420ms);
+}
+
+.scene-plan-runner__shadow {
+  fill: rgba(0, 0, 0, 0.22);
+}
+
+.scene-plan-runner--personnel .scene-patrol__core {
+  filter: drop-shadow(0 0 5px rgba(149, 229, 255, 0.28));
+}
+
+.scene-plan-person__head {
+  fill: rgba(245, 251, 255, 0.94);
+  stroke: rgba(0, 0, 0, 0.22);
+  stroke-width: 0.8;
+}
+
+.scene-plan-person__body {
+  fill: rgba(255, 82, 66, 0.9);
+  stroke: rgba(255, 232, 218, 0.4);
+  stroke-width: 0.8;
+}
+
+.scene-plan-runner--vehicle .scene-vehicle {
+  filter: drop-shadow(0 0 6px rgba(173, 255, 126, 0.26));
+}
+
+.scene-plan-runner--material .scene-material-runner {
+  filter: drop-shadow(0 0 6px rgba(244, 178, 89, 0.28));
+}
+
+.scene-plan-arrival {
+  opacity: 0;
+  animation: planArrivalConfirm 760ms ease-out forwards;
+  animation-delay: var(--arrival-delay, 3.6s);
+}
+
+.scene-plan-arrival--personnel .scene-plan-arrival__ring {
+  fill: none;
+  stroke: rgba(149, 229, 255, 0.62);
+  stroke-width: 1.7;
+  animation: planArrivalRing 760ms ease-out forwards;
+  animation-delay: var(--arrival-delay, 3.6s);
+}
+
+.scene-plan-arrival--personnel .scene-plan-arrival__core {
+  fill: rgba(149, 229, 255, 0.92);
+}
+
+.scene-plan-arrival--vehicle line {
+  stroke: rgba(173, 255, 126, 0.82);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.scene-plan-arrival--vehicle circle {
+  fill: rgba(173, 255, 126, 0.9);
+}
+
+.scene-plan-arrival--material rect {
+  fill: rgba(244, 178, 89, 0.88);
+  stroke: rgba(255, 230, 191, 0.42);
+}
+
+.scene-plan-target {
+  opacity: 0;
+  animation: planTargetPop 420ms ease forwards;
+  animation-delay: 620ms;
+}
+
+.scene-plan-target path {
+  fill: rgba(8, 18, 24, 0.78);
+  stroke-width: 1.4;
+}
+
+.scene-plan-target line {
+  stroke-width: 1.4;
+  stroke-linecap: round;
+}
+
+.scene-plan-target text {
+  font-size: 10px;
+  text-anchor: start;
+  font-weight: 700;
+}
+
+.scene-plan-target--cyan path,
+.scene-plan-target--cyan line {
+  stroke: rgba(75, 232, 255, 0.82);
+}
+
+.scene-plan-target--cyan text {
+  fill: rgba(121, 242, 255, 0.9);
+}
+
+.scene-plan-target--green path,
+.scene-plan-target--green line {
+  stroke: rgba(173, 255, 126, 0.82);
+}
+
+.scene-plan-target--green text {
+  fill: rgba(205, 255, 170, 0.9);
+}
+
+.scene-plan-target--orange path,
+.scene-plan-target--orange line {
+  stroke: rgba(255, 198, 74, 0.86);
+}
+
+.scene-plan-target--orange text {
+  fill: rgba(255, 226, 150, 0.92);
+}
+
+.scene-plan-route__label {
+  opacity: 0;
+  text-anchor: start;
+  animation: planRouteFlowReveal 320ms ease forwards;
+  animation-delay: 820ms;
+}
+
+.scene-phase-effect {
+  pointer-events: none;
+}
+
+.scene-phase-effect text {
+  fill: rgba(255, 240, 150, 0.9);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  paint-order: stroke;
+  stroke: rgba(4, 10, 14, 0.78);
+  stroke-width: 3px;
+}
+
+.scene-phase-effect--scan path {
+  fill: rgba(255, 104, 79, 0.12);
+  stroke: rgba(255, 163, 80, 0.38);
+  stroke-width: 1.4;
+  animation: phaseScanSweep 1.8s ease-in-out infinite alternate;
+}
+
+.scene-phase-effect--scan circle {
+  fill: none;
+  stroke: rgba(255, 119, 88, 0.62);
+  stroke-width: 1.8;
+  stroke-dasharray: 7 9;
+  animation: phaseRingTrace 2.4s linear infinite;
+}
+
+.scene-phase-effect--staging rect {
+  fill: rgba(70, 58, 18, 0.72);
+  stroke: rgba(255, 220, 82, 0.46);
+  stroke-width: 1.2;
+}
+
+.scene-phase-effect--staging line {
+  stroke: rgba(255, 224, 102, 0.56);
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-dasharray: 64 90;
+  animation: phaseStagingLine 1.8s ease-in-out infinite;
+}
+
+.scene-phase-effect--staging circle {
+  fill: rgba(255, 224, 102, 0.9);
+  animation: phaseNodeReady 1.6s ease-in-out infinite alternate;
+}
+
+.scene-phase-effect--execution circle {
+  fill: rgba(76, 214, 255, 0.08);
+  stroke: rgba(76, 214, 255, 0.54);
+  stroke-width: 1.8;
+  stroke-dasharray: 8 10;
+  animation: phaseRingTrace 3s linear infinite;
+}
+
+.scene-phase-effect--execution path {
+  fill: none;
+  stroke: rgba(121, 242, 255, 0.72);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 12 16;
+  animation: stream 2.8s linear infinite;
+}
+
+.scene-phase-effect--closure rect {
+  fill: rgba(18, 56, 38, 0.76);
+  stroke: rgba(173, 255, 126, 0.44);
+  stroke-width: 1.2;
+}
+
+.scene-phase-effect--closure path {
+  fill: none;
+  stroke: rgba(173, 255, 126, 0.9);
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 160;
+  stroke-dashoffset: 160;
+  animation: phaseClosureCheck 1.2s ease forwards;
+}
+
+.scene-phase-effect--closure text {
+  fill: rgba(205, 255, 170, 0.92);
+}
+
+.scene-emergency-plan--phase-0 .scene-plan-origin {
+  animation: none;
+  opacity: 0.28;
+}
+
+.scene-emergency-plan--phase-0 .scene-plan-route .scene-plan-route__corridor {
+  animation: none;
+  opacity: 0.12;
+}
+
+.scene-emergency-plan--phase-0 .scene-plan-route__draw,
+.scene-emergency-plan--phase-0 .scene-plan-route__flow,
+.scene-emergency-plan--phase-0 .scene-plan-target,
+.scene-emergency-plan--phase-0 .scene-plan-runner,
+.scene-emergency-plan--phase-0 .scene-plan-arrival,
+.scene-emergency-plan--phase-0 .scene-plan-route__label {
+  display: none;
+}
+
+.scene-emergency-plan--phase-1 .scene-plan-origin {
+  animation: planOriginReady 280ms ease forwards, phaseResourceReady 1.8s ease-in-out infinite alternate;
+}
+
+.scene-emergency-plan--phase-1 .scene-plan-route .scene-plan-route__corridor {
+  opacity: 0.2;
+}
+
+.scene-emergency-plan--phase-1 .scene-plan-route__draw,
+.scene-emergency-plan--phase-1 .scene-plan-route__flow,
+.scene-emergency-plan--phase-1 .scene-plan-runner,
+.scene-emergency-plan--phase-1 .scene-plan-arrival {
+  display: none;
+}
+
+.scene-emergency-plan--phase-1 .scene-plan-target,
+.scene-emergency-plan--phase-1 .scene-plan-route__label {
+  opacity: 0.42;
+  animation: none;
+}
+
+.scene-emergency-plan--phase-2 .scene-plan-route .scene-plan-route__corridor {
+  stroke-width: 18;
+}
+
+.scene-emergency-plan--phase-2 .scene-plan-arrival {
+  opacity: 0;
+}
+
+.scene-emergency-plan--phase-3 .scene-plan-origin,
+.scene-emergency-plan--phase-3 .scene-plan-runner {
+  display: none;
+}
+
+.scene-emergency-plan--phase-3 .scene-plan-route .scene-plan-route__corridor {
+  animation: none;
+  opacity: 0.14;
+}
+
+.scene-emergency-plan--phase-3 .scene-plan-route__draw,
+.scene-emergency-plan--phase-3 .scene-plan-route__flow {
+  animation: none;
+  opacity: 0.34;
+}
+
+.scene-emergency-plan--phase-3 .scene-plan-target,
+.scene-emergency-plan--phase-3 .scene-plan-route__label,
+.scene-emergency-plan--phase-3 .scene-plan-arrival {
+  opacity: 1;
+  animation: planArrivalConfirm 520ms ease-out forwards;
+}
+
+.scene-emergency-plan--phase-0 .scene-status-banner rect,
+.scene-emergency-plan--phase-0 .scene-result-card rect {
+  fill: rgba(58, 18, 18, 0.82);
+  stroke: rgba(255, 126, 88, 0.34);
+}
+
+.scene-emergency-plan--phase-1 .scene-status-banner rect,
+.scene-emergency-plan--phase-1 .scene-result-card rect {
+  fill: rgba(62, 52, 18, 0.82);
+  stroke: rgba(255, 220, 82, 0.34);
+}
+
+.scene-emergency-plan--phase-2 .scene-status-banner rect,
+.scene-emergency-plan--phase-2 .scene-result-card rect {
+  fill: rgba(12, 44, 58, 0.82);
+  stroke: rgba(76, 214, 255, 0.34);
+}
+
+.scene-emergency-plan--phase-3 .scene-status-banner rect,
+.scene-emergency-plan--phase-3 .scene-result-card rect {
+  fill: rgba(18, 56, 38, 0.82);
+  stroke: rgba(173, 255, 126, 0.34);
 }
 
 .map-caption {
@@ -2612,6 +3208,270 @@ button {
   border-radius: 14px;
   background: rgba(11, 31, 60, 0.5);
   border: 1px solid rgba(124, 201, 255, 0.1);
+}
+
+.emergency-plan-editor {
+  align-self: start;
+  padding: 14px 16px;
+  border-radius: 22px;
+  background:
+    linear-gradient(180deg, rgba(10, 25, 50, 0.88), rgba(7, 18, 38, 0.72)),
+    radial-gradient(circle at top left, rgba(244, 178, 89, 0.08), transparent 42%);
+}
+
+.emergency-plan-editor__head,
+.emergency-plan-editor__actions,
+.emergency-plan-toolbar {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+}
+
+.emergency-plan-editor__head {
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.emergency-plan-editor__head h3 {
+  margin: 0;
+  font-size: 0.96rem;
+}
+
+.emergency-plan-editor__actions,
+.emergency-plan-toolbar {
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.emergency-plan-editor__body {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 14px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(124, 201, 255, 0.1);
+}
+
+.emergency-plan-form {
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.emergency-form-group,
+.emergency-form-field,
+.emergency-step-copy label {
+  display: grid;
+  gap: 7px;
+}
+
+.emergency-form-group {
+  padding: 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(124, 201, 255, 0.1);
+  background: rgba(8, 21, 42, 0.42);
+}
+
+.emergency-form-field span,
+.emergency-step-copy small {
+  color: var(--text-soft);
+  font-size: 0.72rem;
+}
+
+.emergency-form-field input,
+.emergency-form-field select,
+.emergency-step-copy input,
+.emergency-step-copy textarea {
+  width: 100%;
+  min-width: 0;
+  padding: 9px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(124, 201, 255, 0.12);
+  background: rgba(6, 17, 34, 0.78);
+  color: #e8fbff;
+  outline: none;
+}
+
+.emergency-step-copy textarea {
+  resize: vertical;
+  min-height: 62px;
+  line-height: 1.45;
+}
+
+.emergency-form-field input:focus,
+.emergency-form-field select:focus,
+.emergency-step-copy input:focus,
+.emergency-step-copy textarea:focus {
+  border-color: rgba(135, 231, 255, 0.34);
+  box-shadow: 0 0 0 3px rgba(31, 216, 242, 0.1);
+}
+
+.emergency-number-field {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.emergency-number-field b {
+  color: var(--text-soft);
+  font-size: 0.72rem;
+}
+
+.emergency-step-form {
+  grid-template-columns: 1fr;
+}
+
+.emergency-step-panel {
+  position: relative;
+  z-index: 1;
+  border-radius: 18px;
+  border: 1px solid rgba(124, 201, 255, 0.1);
+  background: rgba(8, 21, 42, 0.36);
+  overflow: hidden;
+}
+
+.emergency-step-panel summary {
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  padding: 12px 14px;
+  cursor: pointer;
+  color: #e8fbff;
+}
+
+.emergency-step-panel summary::marker {
+  color: var(--accent-strong);
+}
+
+.emergency-step-panel summary > span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 30px;
+  border-radius: 999px;
+  background: rgba(19, 59, 97, 0.72);
+  color: var(--accent-strong);
+  font-family: 'Bahnschrift', 'DIN Alternate', sans-serif;
+  font-size: 0.78rem;
+}
+
+.emergency-step-panel summary small {
+  color: var(--text-soft);
+  font-size: 0.72rem;
+}
+
+.emergency-step-panel__body {
+  display: grid;
+  gap: 12px;
+  padding: 0 14px 14px;
+}
+
+.emergency-step-copy {
+  display: grid;
+  grid-template-columns: minmax(150px, 0.55fr) minmax(220px, 1fr) auto;
+  gap: 10px;
+  align-items: end;
+}
+
+.emergency-task-board {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.emergency-task-group {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+  min-width: 0;
+  padding: 11px;
+  border-radius: 16px;
+  border: 1px solid rgba(124, 201, 255, 0.1);
+  background: rgba(6, 17, 34, 0.36);
+}
+
+.emergency-task-group__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.emergency-task-group__head span {
+  color: var(--accent-strong);
+  font-size: 0.78rem;
+}
+
+.emergency-task-list {
+  display: grid;
+  gap: 9px;
+}
+
+.emergency-task-row {
+  display: grid;
+  grid-template-columns: minmax(100px, 1.1fr) minmax(70px, 0.72fr);
+  gap: 8px;
+  align-items: end;
+  padding: 9px;
+  border-radius: 14px;
+  border: 1px solid rgba(124, 201, 255, 0.08);
+  background: rgba(8, 21, 42, 0.42);
+}
+
+.emergency-task-row .mini-link {
+  grid-column: 1 / -1;
+  justify-self: start;
+}
+
+.task-empty {
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px dashed rgba(124, 201, 255, 0.14);
+  color: var(--text-soft);
+  font-size: 0.76rem;
+}
+
+.emergency-saved-plan-strip {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.saved-plan-pill {
+  cursor: pointer;
+  min-width: 0;
+  padding: 10px 12px;
+  text-align: left;
+  border-radius: 14px;
+  border: 1px solid rgba(124, 201, 255, 0.1);
+  background: rgba(8, 21, 42, 0.48);
+  color: #e8fbff;
+  transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+}
+
+.saved-plan-pill:hover {
+  transform: translateY(-1px);
+  border-color: rgba(135, 231, 255, 0.28);
+  background: rgba(12, 34, 64, 0.64);
+}
+
+.saved-plan-pill strong,
+.saved-plan-pill span {
+  display: block;
+}
+
+.saved-plan-pill strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.saved-plan-pill span,
+.saved-plan-empty {
+  color: var(--text-soft);
+  font-size: 0.72rem;
 }
 
 .emergency-contacts {
@@ -2898,6 +3758,196 @@ button {
   }
 }
 
+@keyframes aerialCameraDrift {
+  from {
+    transform: scale(1) translate3d(0, 0, 0);
+  }
+
+  to {
+    transform: scale(1.025) translate3d(-8px, 5px, 0);
+  }
+}
+
+@keyframes planOriginReady {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 0.92;
+  }
+}
+
+@keyframes planCorridorReveal {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes planRouteDraw {
+  from {
+    stroke-dashoffset: 1;
+  }
+
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes planTargetPop {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes phaseScanSweep {
+  from {
+    opacity: 0.26;
+  }
+
+  to {
+    opacity: 0.72;
+  }
+}
+
+@keyframes phaseRingTrace {
+  from {
+    stroke-dashoffset: 0;
+  }
+
+  to {
+    stroke-dashoffset: -96;
+  }
+}
+
+@keyframes phaseStagingLine {
+  from {
+    stroke-dashoffset: 90;
+  }
+
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes phaseNodeReady {
+  from {
+    opacity: 0.46;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes phaseResourceReady {
+  from {
+    filter: drop-shadow(0 0 0 rgba(255, 224, 102, 0));
+  }
+
+  to {
+    filter: drop-shadow(0 0 8px rgba(255, 224, 102, 0.34));
+  }
+}
+
+@keyframes phaseClosureCheck {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes planRouteFlowReveal {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 0.72;
+  }
+}
+
+@keyframes planRunnerEnter {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 0.96;
+  }
+}
+
+@keyframes planArrivalConfirm {
+  0% {
+    opacity: 0;
+  }
+
+  35% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0.82;
+  }
+}
+
+@keyframes planArrivalRing {
+  from {
+    r: 4;
+    opacity: 0.78;
+  }
+
+  to {
+    r: 12;
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scene-plan-origin,
+  .scene-frame--reference-exercise .airport-scene,
+  .scene-plan-route .scene-plan-route__corridor,
+  .scene-plan-route__draw,
+  .scene-plan-route__flow,
+  .scene-plan-runner,
+  .scene-plan-arrival,
+  .scene-plan-target,
+  .scene-phase-effect--scan path,
+  .scene-phase-effect--scan circle,
+  .scene-phase-effect--staging line,
+  .scene-phase-effect--staging circle,
+  .scene-phase-effect--execution circle,
+  .scene-phase-effect--execution path,
+  .scene-phase-effect--closure path,
+  .scene-plan-arrival--personnel .scene-plan-arrival__ring,
+  .scene-plan-route__label {
+    animation: none !important;
+    opacity: 1;
+  }
+
+  .scene-plan-route .scene-plan-route__draw {
+    stroke-dasharray: 8 10;
+    stroke-dashoffset: 0;
+  }
+
+  .scene-plan-route__flow,
+  .scene-plan-runner {
+    display: none;
+  }
+
+  .scene-plan-arrival--personnel .scene-plan-arrival__ring {
+    r: 9;
+    opacity: 0.48;
+  }
+}
+
 @media (max-width: 1440px) {
   .topbar {
     position: relative;
@@ -2977,6 +4027,17 @@ button {
 
   .emergency-contact-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .emergency-plan-form,
+  .emergency-step-form,
+  .emergency-saved-plan-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .emergency-step-copy,
+  .emergency-task-board {
+    grid-template-columns: 1fr;
   }
 
   .quick-actions {
@@ -3071,6 +4132,41 @@ button {
 
   .emergency-contact-grid {
     grid-template-columns: 1fr;
+  }
+
+  .emergency-plan-editor__head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .scene-reference-title {
+    top: 12px;
+    min-width: 210px;
+  }
+
+  .scene-reference-panel {
+    top: 58px;
+    width: min(238px, 44%);
+    padding: 10px;
+  }
+
+  .scene-reference-panel p,
+  .scene-reference-row {
+    font-size: 0.66rem;
+  }
+
+  .emergency-plan-form,
+  .emergency-step-form,
+  .emergency-step-copy,
+  .emergency-task-board,
+  .emergency-task-row,
+  .emergency-saved-plan-strip {
+    grid-template-columns: 1fr;
+  }
+
+  .emergency-step-panel summary {
+    grid-template-columns: 1fr;
+    align-items: flex-start;
   }
 
   .contact-card__head,
