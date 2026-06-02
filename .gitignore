@@ -24,3 +24,6 @@ dist-ssr
 *.sw?
 
 .vercel
+.vercel-global/
+.npm-cache/
+*.png

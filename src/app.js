@@ -89,6 +89,10 @@ export async function createApp(root) {
       cleanup = () => {};
     }
 
+    root
+      .querySelector('.app-shell')
+      ?.classList.toggle('is-terminal-model', route.page === 'overview');
+
     activeRoute = route;
     updateChromeStatus(root, data, state);
     updateClock(root, state);

@@ -69,8 +69,8 @@ export function renderOverviewPage({ data, route, state, navigate }) {
 
   return {
     html: `
-      <section class="page page--overview">
-        <div class="page-grid page-grid--overview">
+      <section class="page page--overview page--overview-terminal">
+        <div class="page-grid page-grid--overview page-grid--terminal-overlay">
           <aside class="panel-stack panel-stack--overview panel-stack--overview-left">
             <section class="panel panel--hero reveal">
               <div class="panel-heading">
@@ -133,7 +133,7 @@ export function renderOverviewPage({ data, route, state, navigate }) {
             }
           </aside>
 
-          <section class="panel panel--map reveal" style="animation-delay: 60ms;">
+          <section class="panel panel--map panel--terminal-stage reveal" style="animation-delay: 60ms;">
             <div class="panel-heading panel-heading--map">
               <div class="panel-heading__stack">
                 <span class="panel-kicker">${activeTerminal ? '楼内钻取' : '一张图总览'}</span>
@@ -938,6 +938,7 @@ function setupOverviewPage({
   const searchPool =
     activeTerminal && activeFloor ? buildTerminalSearchPool(activeFloor) : buildSearchPool(data);
 
+  container.classList.add('page-stage--terminal-model');
   footerPanel?.remove();
   overviewPage?.classList.add('page--overview-compact');
   overviewGrid?.classList.add('page-grid--overview-compact');
