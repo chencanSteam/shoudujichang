@@ -113,7 +113,15 @@ export function renderMapScene({
   );
   const transportLayerState = normalizeTransportLayers(transportLayers);
   const focusRegion = mapAssets.regions.find((region) => region.id === focusRegionId) ?? null;
-  const focusView = focusRegion
+  const baseImageHref = mapAssets.baseImage ?? '/assets/airport-model-bg.png';
+  const usePhotoCanvas = mode === 'overview' && Boolean(baseImageHref);
+  const photoViewHeight = Math.round(mapAssets.viewport.height * 0.87);
+  const focusView = usePhotoCanvas
+    ? {
+        viewBox: `0 0 ${mapAssets.viewport.width} ${photoViewHeight}`,
+        spotlight: { x: 50, y: 50, rx: 24, ry: 15 },
+      }
+    : focusRegion
     ? buildFocusViewBox(focusRegion, mapAssets.viewport)
     : {
         viewBox: `0 0 ${mapAssets.viewport.width} ${mapAssets.viewport.height}`,
@@ -126,7 +134,7 @@ export function renderMapScene({
 
   return `
     <div
-      class="scene-frame ${focusRegion ? 'is-region-focused' : ''} ${isEmergencyExercise ? 'scene-frame--reference-exercise' : ''}"
+      class="scene-frame scene-frame--photo-base ${focusRegion ? 'is-region-focused' : ''} ${isEmergencyExercise ? 'scene-frame--reference-exercise' : ''}"
       style="--spotlight-x:${focusView.spotlight.x}%; --spotlight-y:${focusView.spotlight.y}%; --spotlight-rx:${focusView.spotlight.rx}%; --spotlight-ry:${focusView.spotlight.ry}%"
     >
       <div class="scene-hud">
@@ -162,7 +170,7 @@ export function renderMapScene({
       <svg
         class="airport-scene airport-scene--${mode}"
         viewBox="${focusView.viewBox}"
-        preserveAspectRatio="xMidYMid meet"
+        preserveAspectRatio="xMidYMid slice"
         role="img"
         aria-label="首都机场数字孪生抽象机场总图"
       >
@@ -181,42 +189,66 @@ export function renderMapScene({
         </defs>
 
         <rect class="scene-bg" x="0" y="0" width="${mapAssets.viewport.width}" height="${mapAssets.viewport.height}"></rect>
+        <image
+          class="scene-bg-image"
+          href="${baseImageHref}"
+          x="0"
+          y="0"
+          width="${mapAssets.viewport.width}"
+          height="${mapAssets.viewport.height}"
+          preserveAspectRatio="xMidYMid slice"
+        ></image>
+        <rect class="scene-base-shade" x="0" y="0" width="${mapAssets.viewport.width}" height="${mapAssets.viewport.height}"></rect>
         ${isEmergencyExercise ? renderAerialExerciseTexture(mapAssets.viewport) : ''}
         <ellipse class="scene-halo" cx="548" cy="408" rx="438" ry="192"></ellipse>
         <ellipse class="scene-halo scene-halo--secondary" cx="550" cy="520" rx="520" ry="138"></ellipse>
-        ${renderSimulatedGisLayer(mapAssets)}
+        <g class="scene-semantic-layer">
+          ${renderSimulatedGisLayer(mapAssets)}
 
-        ${mapAssets.roads
-          .map(
-            (road) => `
-              <g class="road-layer ${roadTone(roadLevels.get(road.id))}">
-                <path class="road-layer__shadow" d="${road.path}"></path>
-                <path class="road-layer__base" d="${road.path}"></path>
-                <path class="road-layer__flow" d="${road.path}"></path>
-                <text class="road-layer__label" x="${roadLabelX(road.id)}" y="${roadLabelY(road.id)}">${road.name}</text>
-              </g>
-            `,
-          )
-          .join('')}
+          ${mapAssets.roads
+            .map(
+              (road) => `
+                <g class="road-layer ${roadTone(roadLevels.get(road.id))}">
+                  <path class="road-layer__shadow" d="${road.path}"></path>
+                  <path class="road-layer__base" d="${road.path}"></path>
+                  <path class="road-layer__flow" d="${road.path}"></path>
+                  <text class="road-layer__label" x="${roadLabelX(road.id)}" y="${roadLabelY(road.id)}">${road.name}</text>
+                </g>
+              `,
+            )
+            .join('')}
 
-        ${mapAssets.regions
-          .map((region) => {
-            const { top, front, side } = prism(region.shape);
-            const isFocused = region.id === focusRegionId;
+          ${mapAssets.regions
+            .map((region) => {
+              const isFocused = region.id === focusRegionId;
+              const photoArea = region.photoArea ?? null;
 
-            return `
-              <g class="scene-region scene-region--${region.tone} ${isFocused ? 'is-focused' : ''}" data-region-id="${region.id}">
-                <polygon class="scene-region__top" points="${pointsToString(top)}"></polygon>
-                <polygon class="scene-region__front" points="${pointsToString(front)}"></polygon>
-                <polygon class="scene-region__side" points="${pointsToString(side)}"></polygon>
-                <text class="scene-region__label" x="${region.label.x}" y="${region.label.y}">${region.name}</text>
-              </g>
-            `;
-          })
-          .join('')}
+              if (photoArea) {
+                return `
+                  <g class="scene-region scene-region--photo scene-region--${region.tone} ${isFocused ? 'is-focused' : ''}" data-region-id="${region.id}">
+                    <polygon class="scene-region__photo-hit" points="${pointsToString(photoArea)}"></polygon>
+                    <text class="scene-region__label" x="${region.label.x}" y="${region.label.y}">${region.name}</text>
+                  </g>
+                `;
+              }
+
+              const { top, front, side } = prism(region.shape);
+
+              return `
+                <g class="scene-region scene-region--${region.tone} ${isFocused ? 'is-focused' : ''}" data-region-id="${region.id}">
+                  <polygon class="scene-region__top" points="${pointsToString(top)}"></polygon>
+                  <polygon class="scene-region__front" points="${pointsToString(front)}"></polygon>
+                  <polygon class="scene-region__side" points="${pointsToString(side)}"></polygon>
+                  <text class="scene-region__label" x="${region.label.x}" y="${region.label.y}">${region.name}</text>
+                </g>
+              `;
+            })
+            .join('')}
+        </g>
 
         ${trafficScenario ? renderTrafficFacilities(trafficScenario) : ''}
         ${mode === 'overview' ? renderOverviewDevices(overviewDevices, activeDeviceId) : ''}
+        ${mode === 'overview' ? renderWaitingHallHotspot() : ''}
         ${trafficScenario ? renderTrafficNodes(trafficScenario) : ''}
         ${trafficScenario ? renderTrafficVehicles(trafficScenario, mapAssets) : ''}
         ${mode === 'overview' ? renderOverviewTransportVehicles(mapAssets, transportLayerState) : ''}
@@ -283,6 +315,15 @@ export function renderMapScene({
       ${mode === 'overview' ? renderOverviewDevicePopup(activeDevice, mapAssets) : ''}
       ${mode === 'overview' ? renderSearchResultPopup(searchResultOverlay, mapAssets) : ''}
     </div>
+  `;
+}
+
+function renderWaitingHallHotspot() {
+  return `
+    <g class="scene-building-link scene-building-link--waiting-hall" data-open-indoor-map="waiting-hall" role="button" tabindex="0" aria-label="查看候机厅室内图">
+      <polygon class="scene-building-link__area" points="492,332 648,332 672,354 654,374 474,370 456,348"></polygon>
+      <text class="scene-building-link__label" x="565" y="326">候机厅</text>
+    </g>
   `;
 }
 
@@ -378,14 +419,16 @@ function renderTrafficVehicles(trafficScenario, mapAssets) {
 
       return Array.from({ length: stream.count }).map(
         (_, index) => `
-          <circle class="scene-vehicle scene-vehicle--${stream.tone ?? 'accent'}" r="${index % 2 === 0 ? 4 : 3.2}">
+          <g class="scene-vehicle scene-vehicle--moving scene-vehicle--${stream.tone ?? 'accent'}">
             <animateMotion
-              dur="${Math.max(2.6, 6.5 - (stream.speed ?? 1) * 1.35)}s"
-              begin="${index * 0.7}s"
+              dur="${slowVehicleDuration(stream.speed, 18, 3.2)}s"
+              begin="${index * 2.1}s"
               repeatCount="indefinite"
-              path="${road.path}"
+              path="${roadMotionPath(road)}"
+              rotate="auto"
             />
-          </circle>
+            ${renderVehicleIcon(stream.tone ?? 'accent', index % 2 === 0 ? 0.74 : 0.68)}
+          </g>
         `,
       );
     })
@@ -481,14 +524,16 @@ function renderOverviewTransportVehicles(mapAssets, transportLayerState) {
 
       return Array.from({ length: stream.count }).map(
         (_, index) => `
-          <circle class="scene-vehicle scene-vehicle--overview scene-vehicle--${layer.tone}" r="${stream.radius}">
+          <g class="scene-vehicle scene-vehicle--moving scene-vehicle--overview scene-vehicle--${layer.tone}">
             <animateMotion
-              dur="${Math.max(2.8, 7.8 - stream.speed * 1.55)}s"
-              begin="${(stream.offset + index * 0.68).toFixed(2)}s"
+              dur="${slowVehicleDuration(stream.speed, 20, 3.6)}s"
+              begin="${(stream.offset * 8 + index * 2.4).toFixed(2)}s"
               repeatCount="indefinite"
-              path="${road.path}"
+              path="${roadMotionPath(road)}"
+              rotate="auto"
             />
-          </circle>
+            ${renderVehicleIcon(layer.tone, Math.max(0.68, stream.radius / 6.8))}
+          </g>
         `,
       );
     });
@@ -508,7 +553,7 @@ function renderOverviewPatrolUnits(mapAssets, transportLayerState) {
           (point) => `
             <g class="scene-patrol scene-patrol--personnel" transform="translate(${point.x} ${point.y})">
               <circle class="scene-patrol__ring" r="12"></circle>
-              <circle class="scene-patrol__core" r="4.5"></circle>
+              ${renderPersonnelIcon()}
               <text class="scene-patrol__label" x="16" y="4">${point.label}</text>
             </g>
           `,
@@ -528,14 +573,16 @@ function renderOverviewPatrolUnits(mapAssets, transportLayerState) {
 
             return Array.from({ length: stream.count }).map(
               (_, index) => `
-                <circle class="scene-vehicle scene-vehicle--overview scene-vehicle--patrol" r="${stream.radius}">
+                <g class="scene-vehicle scene-vehicle--moving scene-vehicle--overview scene-vehicle--patrol">
                   <animateMotion
-                    dur="${Math.max(3, 8 - stream.speed * 1.4)}s"
-                    begin="${(stream.offset + index * 0.9).toFixed(2)}s"
+                    dur="${slowVehicleDuration(stream.speed, 22, 3.8)}s"
+                    begin="${(stream.offset * 8 + index * 2.8).toFixed(2)}s"
                     repeatCount="indefinite"
-                    path="${road.path}"
+                    path="${roadMotionPath(road)}"
+                    rotate="auto"
                   />
-                </circle>
+                  ${renderVehicleIcon('patrol', Math.max(0.7, stream.radius / 6.8))}
+                </g>
               `,
             );
           })
@@ -543,6 +590,97 @@ function renderOverviewPatrolUnits(mapAssets, transportLayerState) {
       : '';
 
   return `${personnelMarkup}${vehicleMarkup}`;
+}
+
+function roadMotionPath(road) {
+  return road.photoPath ?? road.path;
+}
+
+function slowVehicleDuration(speed = 1, base = 18, factor = 3.2) {
+  return Math.max(12, base - speed * factor).toFixed(1);
+}
+
+function renderVehicleIcon(tone, scale = 1) {
+  const normalizedTone = {
+    bus: 'bus',
+    taxi: 'taxi',
+    ride: 'ride',
+    private: 'private',
+    patrol: 'patrol',
+    hot: 'hot',
+    warm: 'taxi',
+    cool: 'ride',
+    accent: 'private',
+  }[tone] ?? 'private';
+
+  const icons = {
+    bus: `
+      <g class="scene-vehicle-icon scene-vehicle-icon--bus" transform="scale(${scale})">
+        <rect class="scene-vehicle-icon__body" x="-13" y="-7" width="26" height="14" rx="4"></rect>
+        <rect class="scene-vehicle-icon__window" x="-9" y="-5" width="6" height="4" rx="1"></rect>
+        <rect class="scene-vehicle-icon__window" x="-1" y="-5" width="6" height="4" rx="1"></rect>
+        <rect class="scene-vehicle-icon__window" x="7" y="-5" width="4" height="4" rx="1"></rect>
+        <circle class="scene-vehicle-icon__wheel" cx="-7" cy="7" r="2"></circle>
+        <circle class="scene-vehicle-icon__wheel" cx="8" cy="7" r="2"></circle>
+      </g>
+    `,
+    taxi: `
+      <g class="scene-vehicle-icon scene-vehicle-icon--taxi" transform="scale(${scale})">
+        <path class="scene-vehicle-icon__body" d="M -12 4 L -9 -4 L -4 -8 H 5 L 10 -4 L 13 4 Z"></path>
+        <rect class="scene-vehicle-icon__sign" x="-4" y="-12" width="8" height="3" rx="1"></rect>
+        <path class="scene-vehicle-icon__window" d="M -6 -4 L -3 -7 H 4 L 7 -4 Z"></path>
+        <circle class="scene-vehicle-icon__wheel" cx="-7" cy="5" r="2"></circle>
+        <circle class="scene-vehicle-icon__wheel" cx="8" cy="5" r="2"></circle>
+      </g>
+    `,
+    ride: `
+      <g class="scene-vehicle-icon scene-vehicle-icon--ride" transform="scale(${scale})">
+        <path class="scene-vehicle-icon__body" d="M -12 4 L -9 -3 L -3 -7 H 5 L 10 -3 L 13 4 Z"></path>
+        <path class="scene-vehicle-icon__pin" d="M 0 -15 C 4 -15 7 -12 7 -8 C 7 -3 0 2 0 2 C 0 2 -7 -3 -7 -8 C -7 -12 -4 -15 0 -15 Z"></path>
+        <circle class="scene-vehicle-icon__pin-core" cx="0" cy="-8" r="2"></circle>
+        <circle class="scene-vehicle-icon__wheel" cx="-7" cy="5" r="2"></circle>
+        <circle class="scene-vehicle-icon__wheel" cx="8" cy="5" r="2"></circle>
+      </g>
+    `,
+    private: `
+      <g class="scene-vehicle-icon scene-vehicle-icon--private" transform="scale(${scale})">
+        <path class="scene-vehicle-icon__body" d="M -13 4 L -10 -3 L -4 -7 H 5 L 11 -2 L 13 4 Z"></path>
+        <path class="scene-vehicle-icon__window" d="M -6 -3 L -3 -6 H 4 L 8 -3 Z"></path>
+        <circle class="scene-vehicle-icon__wheel" cx="-7" cy="5" r="2"></circle>
+        <circle class="scene-vehicle-icon__wheel" cx="8" cy="5" r="2"></circle>
+      </g>
+    `,
+    patrol: `
+      <g class="scene-vehicle-icon scene-vehicle-icon--patrol" transform="scale(${scale})">
+        <rect class="scene-vehicle-icon__body" x="-12" y="-6" width="24" height="12" rx="4"></rect>
+        <rect class="scene-vehicle-icon__window" x="-6" y="-4" width="10" height="4" rx="1"></rect>
+        <circle class="scene-vehicle-icon__beacon" cx="8" cy="-8" r="2.4"></circle>
+        <circle class="scene-vehicle-icon__wheel" cx="-7" cy="6" r="2"></circle>
+        <circle class="scene-vehicle-icon__wheel" cx="8" cy="6" r="2"></circle>
+      </g>
+    `,
+    hot: `
+      <g class="scene-vehicle-icon scene-vehicle-icon--hot" transform="scale(${scale})">
+        <path class="scene-vehicle-icon__body" d="M -12 4 L -8 -4 L -2 -8 H 5 L 11 -2 L 13 4 Z"></path>
+        <path class="scene-vehicle-icon__window" d="M -5 -4 L -2 -7 H 4 L 8 -4 Z"></path>
+        <circle class="scene-vehicle-icon__wheel" cx="-7" cy="5" r="2"></circle>
+        <circle class="scene-vehicle-icon__wheel" cx="8" cy="5" r="2"></circle>
+      </g>
+    `,
+  };
+
+  return icons[normalizedTone];
+}
+
+function renderPersonnelIcon() {
+  return `
+    <g class="scene-person-icon">
+      <circle class="scene-person-icon__head" cx="0" cy="-7" r="3.4"></circle>
+      <path class="scene-person-icon__body" d="M -5 4 C -4 -1 -2 -3 0 -3 C 2 -3 4 -1 5 4 L 3 8 H -3 Z"></path>
+      <path class="scene-person-icon__leg" d="M -2 7 L -5 12 M 2 7 L 5 12"></path>
+      <path class="scene-person-icon__arm" d="M -4 1 L -8 5 M 4 1 L 8 5"></path>
+    </g>
+  `;
 }
 
 function renderSimulatedGisLayer(mapAssets) {

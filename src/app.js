@@ -150,6 +150,9 @@ function createState(data) {
         patrolPersonnel: true,
         patrolVehicle: true,
       },
+      overviewLeftRailCollapsed: false,
+      overviewRightRailCollapsed: false,
+      waitingHallIndoorOpen: false,
     },
     demo: {
       playing: false,

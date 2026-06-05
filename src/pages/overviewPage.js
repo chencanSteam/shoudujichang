@@ -70,7 +70,27 @@ export function renderOverviewPage({ data, route, state, navigate }) {
   return {
     html: `
       <section class="page page--overview page--overview-terminal">
-        <div class="page-grid page-grid--overview page-grid--terminal-overlay">
+        <div class="page-grid page-grid--overview page-grid--terminal-overlay ${state.ui.overviewLeftRailCollapsed ? 'is-left-rail-collapsed' : ''} ${state.ui.overviewRightRailCollapsed ? 'is-right-rail-collapsed' : ''}">
+          <button
+            class="rail-collapse-toggle rail-collapse-toggle--left"
+            type="button"
+            data-toggle-overview-rail="left"
+            aria-pressed="${state.ui.overviewLeftRailCollapsed}"
+            aria-label="${state.ui.overviewLeftRailCollapsed ? '展开左侧面板' : '收起左侧面板'}"
+            title="${state.ui.overviewLeftRailCollapsed ? '展开左侧面板' : '收起左侧面板'}"
+          >
+            <span>${state.ui.overviewLeftRailCollapsed ? '›' : '‹'}</span>
+          </button>
+          <button
+            class="rail-collapse-toggle rail-collapse-toggle--right"
+            type="button"
+            data-toggle-overview-rail="right"
+            aria-pressed="${state.ui.overviewRightRailCollapsed}"
+            aria-label="${state.ui.overviewRightRailCollapsed ? '展开右侧面板' : '收起右侧面板'}"
+            title="${state.ui.overviewRightRailCollapsed ? '展开右侧面板' : '收起右侧面板'}"
+          >
+            <span>${state.ui.overviewRightRailCollapsed ? '‹' : '›'}</span>
+          </button>
           <aside class="panel-stack panel-stack--overview panel-stack--overview-left">
             <section class="panel panel--hero reveal">
               <div class="panel-heading">
@@ -178,6 +198,21 @@ export function renderOverviewPage({ data, route, state, navigate }) {
                 : renderBalancedAirportRightRail(data, airportAlert, focusRegion)
             }
           </aside>
+        </div>
+        <div class="indoor-map-modal ${state.ui.waitingHallIndoorOpen ? 'is-open' : ''}" data-indoor-map-modal aria-hidden="${state.ui.waitingHallIndoorOpen ? 'false' : 'true'}">
+          <div class="indoor-map-modal__backdrop" data-close-indoor-map></div>
+          <section class="indoor-map-modal__panel" role="dialog" aria-modal="true" aria-label="候机厅室内图">
+            <div class="indoor-map-modal__header">
+              <div>
+                <span class="panel-kicker">建筑室内图</span>
+                <h3>候机厅</h3>
+              </div>
+              <button class="indoor-map-modal__close" type="button" data-close-indoor-map aria-label="关闭候机厅室内图">×</button>
+            </div>
+            <div class="indoor-map-modal__body">
+              <img src="/assets/waiting-hall-indoor.png" alt="候机厅室内图" />
+            </div>
+          </section>
         </div>
       </section>
     `,
@@ -942,6 +977,7 @@ function setupOverviewPage({
   footerPanel?.remove();
   overviewPage?.classList.add('page--overview-compact');
   overviewGrid?.classList.add('page-grid--overview-compact');
+  bindOverviewRailCollapse(container, state);
 
   const trendChart = null;
   const areaChart = null;
@@ -1039,6 +1075,7 @@ function setupOverviewPage({
       activeFloor,
       terminalContext,
     });
+    bindWaitingHallIndoorMap(container, state);
 
     sceneSlot.querySelectorAll('[data-transport-layer]').forEach((button) => {
       button.addEventListener('click', () => {
@@ -2071,6 +2108,96 @@ function bindSceneLinks(container, data, navigate, context) {
       );
     });
   });
+}
+
+function bindOverviewRailCollapse(container, state) {
+  const grid = container.querySelector('.page-grid--terminal-overlay');
+  if (!grid) {
+    return;
+  }
+
+  const updateToggle = (side) => {
+    const collapsed =
+      side === 'left' ? state.ui.overviewLeftRailCollapsed : state.ui.overviewRightRailCollapsed;
+    const button = grid.querySelector(`[data-toggle-overview-rail="${side}"]`);
+    if (!button) {
+      return;
+    }
+
+    const sideLabel = side === 'left' ? '左' : '右';
+    const actionLabel = collapsed ? `展开${sideLabel}侧面板` : `收起${sideLabel}侧面板`;
+    button.setAttribute('aria-pressed', String(collapsed));
+    button.setAttribute('aria-label', actionLabel);
+    button.setAttribute('title', actionLabel);
+    button.querySelector('span').textContent = side === 'left' ? (collapsed ? '›' : '‹') : collapsed ? '‹' : '›';
+  };
+
+  grid.querySelectorAll('[data-toggle-overview-rail]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const side = button.dataset.toggleOverviewRail;
+      if (side === 'left') {
+        state.ui.overviewLeftRailCollapsed = !state.ui.overviewLeftRailCollapsed;
+        grid.classList.toggle('is-left-rail-collapsed', state.ui.overviewLeftRailCollapsed);
+        updateToggle('left');
+      }
+
+      if (side === 'right') {
+        state.ui.overviewRightRailCollapsed = !state.ui.overviewRightRailCollapsed;
+        grid.classList.toggle('is-right-rail-collapsed', state.ui.overviewRightRailCollapsed);
+        updateToggle('right');
+      }
+    });
+  });
+}
+
+function bindWaitingHallIndoorMap(container, state) {
+  const modal = container.querySelector('[data-indoor-map-modal]');
+  const openButtons = container.querySelectorAll('[data-open-indoor-map="waiting-hall"]');
+  if (!modal || !openButtons.length) {
+    return;
+  }
+
+  const setOpen = (open) => {
+    state.ui.waitingHallIndoorOpen = open;
+    modal.classList.toggle('is-open', open);
+    modal.setAttribute('aria-hidden', String(!open));
+  };
+
+  openButtons.forEach((button) => {
+    if (button.dataset.indoorMapBound === 'true') {
+      return;
+    }
+
+    button.dataset.indoorMapBound = 'true';
+    button.addEventListener('click', () => setOpen(true));
+    button.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        setOpen(true);
+      }
+    });
+  });
+
+  container.querySelectorAll('[data-close-indoor-map]').forEach((button) => {
+    if (button.dataset.indoorCloseBound === 'true') {
+      return;
+    }
+
+    button.dataset.indoorCloseBound = 'true';
+    button.addEventListener('click', () => setOpen(false));
+  });
+
+  if (modal.dataset.escapeBound === 'true') {
+    return;
+  }
+
+  modal.dataset.escapeBound = 'true';
+  const closeOnEscape = (event) => {
+    if (event.key === 'Escape') {
+      setOpen(false);
+    }
+  };
+  window.addEventListener('keydown', closeOnEscape);
 }
 
 function bindSearchResults(container, data, navigate, context) {

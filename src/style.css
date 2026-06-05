@@ -619,6 +619,7 @@ button {
 .app-shell.is-terminal-model .page-stage {
   height: 100vh;
   padding-top: 0;
+  overflow: hidden;
 }
 
 .page {
@@ -649,7 +650,9 @@ button {
 }
 
 .page--overview-terminal {
+  height: 100vh;
   min-height: 100vh;
+  overflow: hidden;
   padding: 0;
 }
 
@@ -661,7 +664,9 @@ button {
 
 .page-grid--terminal-overlay {
   position: relative;
+  height: 100vh;
   min-height: 100vh;
+  overflow: hidden;
   gap: 0;
   grid-template-columns: 1fr;
   grid-template-rows: 1fr;
@@ -686,6 +691,14 @@ button {
   padding: 0;
   pointer-events: auto;
   align-content: start;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  transition: transform 260ms ease, opacity 220ms ease;
+}
+
+.page-grid--terminal-overlay .panel-stack--overview-left::-webkit-scrollbar,
+.page-grid--terminal-overlay .panel-stack--overview-right::-webkit-scrollbar {
+  display: none;
 }
 
 .page-grid--terminal-overlay .panel-stack--overview-left {
@@ -694,6 +707,64 @@ button {
 
 .page-grid--terminal-overlay .panel-stack--overview-right {
   right: 22px;
+}
+
+.page-grid--terminal-overlay.is-left-rail-collapsed .panel-stack--overview-left {
+  opacity: 0.18;
+  pointer-events: none;
+  transform: translateX(calc(-100% - 34px));
+}
+
+.page-grid--terminal-overlay.is-right-rail-collapsed .panel-stack--overview-right {
+  opacity: 0.18;
+  pointer-events: none;
+  transform: translateX(calc(100% + 34px));
+}
+
+.rail-collapse-toggle {
+  position: absolute;
+  top: 50%;
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 72px;
+  border: 1px solid rgba(124, 201, 255, 0.2);
+  background: rgba(5, 17, 34, 0.72);
+  color: #e8fbff;
+  cursor: pointer;
+  transform: translateY(-50%);
+  transition: left 260ms ease, right 260ms ease, border-color 180ms ease, background 180ms ease;
+  backdrop-filter: blur(16px);
+}
+
+.rail-collapse-toggle:hover {
+  border-color: rgba(135, 231, 255, 0.5);
+  background: rgba(17, 51, 86, 0.82);
+}
+
+.rail-collapse-toggle span {
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
+.rail-collapse-toggle--left {
+  left: calc(22px + min(330px, calc(50vw - 28px)) + 8px);
+  border-radius: 0 999px 999px 0;
+}
+
+.rail-collapse-toggle--right {
+  right: calc(22px + min(330px, calc(50vw - 28px)) + 8px);
+  border-radius: 999px 0 0 999px;
+}
+
+.page-grid--terminal-overlay.is-left-rail-collapsed .rail-collapse-toggle--left {
+  left: 8px;
+}
+
+.page-grid--terminal-overlay.is-right-rail-collapsed .rail-collapse-toggle--right {
+  right: 8px;
 }
 
 .page-grid--terminal-overlay .panel-stack--overview > .panel {
@@ -724,6 +795,85 @@ button {
 .page-grid--terminal-overlay .video-card {
   border-radius: 14px;
   background: rgba(5, 17, 34, 0.58);
+}
+
+.indoor-map-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  padding: 46px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms ease;
+}
+
+.indoor-map-modal.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.indoor-map-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(1, 7, 16, 0.72);
+  backdrop-filter: blur(10px);
+}
+
+.indoor-map-modal__panel {
+  position: relative;
+  z-index: 1;
+  width: min(1180px, calc(100vw - 92px));
+  max-height: calc(100vh - 92px);
+  overflow: hidden;
+  border: 1px solid rgba(150, 222, 255, 0.22);
+  border-radius: 18px;
+  background:
+    linear-gradient(180deg, rgba(5, 15, 31, 0.94), rgba(4, 13, 27, 0.9)),
+    radial-gradient(circle at top right, rgba(82, 212, 255, 0.1), transparent 44%);
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.46), inset 0 1px 0 rgba(216, 248, 255, 0.08);
+}
+
+.indoor-map-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 16px 18px;
+  border-bottom: 1px solid rgba(124, 201, 255, 0.12);
+}
+
+.indoor-map-modal__header h3 {
+  margin: 4px 0 0;
+  color: #f3fdff;
+  font-size: 1.25rem;
+}
+
+.indoor-map-modal__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid rgba(124, 201, 255, 0.18);
+  border-radius: 999px;
+  background: rgba(8, 21, 42, 0.72);
+  color: #e8fbff;
+  cursor: pointer;
+  font-size: 1.25rem;
+}
+
+.indoor-map-modal__body {
+  height: min(680px, calc(100vh - 178px));
+  background: #06111f;
+}
+
+.indoor-map-modal__body img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .page-grid--three-column {
@@ -1826,9 +1976,71 @@ button {
   filter: drop-shadow(0 0 6px rgba(82, 212, 255, 0.35));
 }
 
+.scene-vehicle--moving {
+  overflow: visible;
+}
+
 .scene-vehicle--overview {
   opacity: 0.94;
   filter: drop-shadow(0 0 8px rgba(82, 212, 255, 0.32));
+}
+
+.scene-vehicle-icon {
+  paint-order: stroke;
+  stroke: rgba(4, 12, 22, 0.92);
+  stroke-width: 1.4;
+  vector-effect: non-scaling-stroke;
+}
+
+.scene-vehicle-icon__body {
+  fill: rgba(159, 245, 255, 0.94);
+}
+
+.scene-vehicle-icon__window,
+.scene-vehicle-icon__sign,
+.scene-vehicle-icon__pin-core {
+  fill: rgba(5, 18, 32, 0.82);
+}
+
+.scene-vehicle-icon__wheel {
+  fill: rgba(2, 8, 16, 0.92);
+  stroke: rgba(229, 250, 255, 0.35);
+  stroke-width: 0.8;
+}
+
+.scene-vehicle-icon__pin {
+  fill: rgba(225, 250, 255, 0.92);
+}
+
+.scene-vehicle-icon__beacon {
+  fill: rgba(255, 105, 105, 0.96);
+  stroke: rgba(255, 225, 225, 0.7);
+}
+
+.scene-vehicle-icon--bus .scene-vehicle-icon__body {
+  fill: rgba(124, 233, 198, 0.96);
+}
+
+.scene-vehicle-icon--taxi .scene-vehicle-icon__body,
+.scene-vehicle-icon--taxi .scene-vehicle-icon__sign {
+  fill: rgba(255, 205, 87, 0.98);
+}
+
+.scene-vehicle-icon--ride .scene-vehicle-icon__body,
+.scene-vehicle-icon--ride .scene-vehicle-icon__pin {
+  fill: rgba(91, 219, 255, 0.96);
+}
+
+.scene-vehicle-icon--private .scene-vehicle-icon__body {
+  fill: rgba(255, 150, 150, 0.96);
+}
+
+.scene-vehicle-icon--patrol .scene-vehicle-icon__body {
+  fill: rgba(173, 255, 126, 0.96);
+}
+
+.scene-vehicle-icon--hot .scene-vehicle-icon__body {
+  fill: rgba(255, 123, 123, 0.96);
 }
 
 .scene-vehicle--hot {
@@ -1877,6 +2089,20 @@ button {
 
 .scene-patrol__core {
   fill: rgba(149, 229, 255, 0.96);
+}
+
+.scene-person-icon {
+  fill: rgba(149, 229, 255, 0.96);
+  stroke: rgba(4, 12, 22, 0.9);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.6;
+  filter: drop-shadow(0 0 7px rgba(149, 229, 255, 0.36));
+}
+
+.scene-person-icon__leg,
+.scene-person-icon__arm {
+  fill: none;
 }
 
 .scene-patrol__label {
@@ -2238,8 +2464,8 @@ button {
   z-index: 2;
   pointer-events: none;
   background:
-    linear-gradient(90deg, rgba(1, 8, 18, 0.82), transparent 18%, transparent 82%, rgba(1, 8, 18, 0.82)),
-    linear-gradient(180deg, rgba(1, 8, 18, 0.48), transparent 34%, rgba(1, 8, 18, 0.54));
+    linear-gradient(90deg, rgba(1, 8, 18, 0.46), transparent 16%, transparent 84%, rgba(1, 8, 18, 0.46)),
+    linear-gradient(180deg, rgba(1, 8, 18, 0.18), transparent 34%, rgba(1, 8, 18, 0.08));
 }
 
 .scene-frame--reference-exercise {
@@ -2499,7 +2725,7 @@ button {
   position: relative;
   z-index: 1;
   min-height: 100vh;
-  transform: scale(1.12);
+  transform: none;
   transform-origin: center;
 }
 
@@ -2512,12 +2738,66 @@ button {
   backdrop-filter: blur(16px);
 }
 
+.panel--terminal-stage .scene-overlay-controls {
+  top: 72px;
+  right: auto;
+  left: calc(min(330px, calc(50vw - 28px)) + 44px);
+  z-index: 9;
+  justify-items: start;
+  max-width: 180px;
+}
+
+.panel--terminal-stage .scene-layer-strip {
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+}
+
+.panel--terminal-stage .scene-layer-strip .layer-pill {
+  width: 150px;
+  justify-content: flex-start;
+}
+
 .scene-camera {
   transform-origin: center;
 }
 
 .scene-bg {
   fill: rgba(4, 12, 22, 0.96);
+}
+
+.scene-bg-image {
+  opacity: 0.98;
+  pointer-events: none;
+}
+
+.scene-base-shade {
+  fill: rgba(2, 8, 18, 0.06);
+  pointer-events: none;
+}
+
+.scene-frame--photo-base .scene-halo {
+  display: none;
+}
+
+.scene-frame--photo-base .scene-halo--secondary {
+  display: none;
+}
+
+.scene-frame--photo-base .scene-semantic-layer {
+  opacity: 0;
+}
+
+.scene-frame--photo-base .scene-gis {
+  display: none;
+}
+
+.scene-frame--photo-base .road-layer {
+  display: none;
+}
+
+.scene-frame--photo-base .scene-region__label {
+  display: none;
 }
 
 .scene-frame--reference-exercise .scene-bg {
@@ -2630,13 +2910,13 @@ button {
 }
 
 .road-layer__shadow {
-  stroke: rgba(0, 0, 0, 0.32);
-  stroke-width: 24;
+  stroke: rgba(0, 0, 0, 0.28);
+  stroke-width: 16;
 }
 
 .road-layer__base {
-  stroke: rgba(138, 207, 255, 0.26);
-  stroke-width: 18;
+  stroke: rgba(138, 207, 255, 0.18);
+  stroke-width: 10;
 }
 
 .road-layer__flow {
@@ -2690,13 +2970,107 @@ button {
   transform: translateY(-4px);
 }
 
+.scene-region--photo:hover,
+.scene-frame.is-region-focused .scene-region--photo.is-focused {
+  transform: none;
+}
+
 .scene-region__top {
-  opacity: 0.94;
+  opacity: 0.72;
 }
 
 .scene-region__front,
 .scene-region__side {
-  opacity: 0.68;
+  opacity: 0.46;
+}
+
+.scene-frame--photo-base .scene-region__top {
+  opacity: 0.46;
+  stroke: rgba(226, 245, 255, 0.28);
+  stroke-width: 1.4;
+}
+
+.scene-frame--photo-base .scene-region__front,
+.scene-frame--photo-base .scene-region__side {
+  opacity: 0.22;
+}
+
+.scene-frame--photo-base .scene-region__label,
+.scene-frame--photo-base .road-layer__label,
+.scene-frame--photo-base .scene-route__label {
+  paint-order: stroke;
+  stroke: rgba(2, 8, 18, 0.9);
+  stroke-width: 4px;
+}
+
+.scene-region--photo {
+  cursor: pointer;
+}
+
+.scene-region__photo-hit {
+  fill: rgba(31, 216, 242, 0.08);
+  stroke: rgba(174, 241, 255, 0.34);
+  stroke-width: 1.5;
+  stroke-dasharray: 8 8;
+  transition: fill 180ms ease, stroke 180ms ease, stroke-width 180ms ease, filter 180ms ease;
+}
+
+.scene-region--photo:hover .scene-region__photo-hit,
+.scene-region--photo.is-focused .scene-region__photo-hit {
+  fill: rgba(31, 216, 242, 0.18);
+  stroke: rgba(210, 252, 255, 0.86);
+  stroke-width: 2.4;
+  filter: url(#softGlow);
+}
+
+.scene-region--photo.scene-region--terminal .scene-region__photo-hit {
+  fill: rgba(244, 178, 89, 0.12);
+  stroke: rgba(255, 214, 122, 0.52);
+}
+
+.scene-region--photo.scene-region--terminal:hover .scene-region__photo-hit,
+.scene-region--photo.scene-region--terminal.is-focused .scene-region__photo-hit {
+  fill: rgba(244, 178, 89, 0.22);
+  stroke: rgba(255, 232, 154, 0.92);
+}
+
+.scene-region--photo.scene-region--parking .scene-region__photo-hit,
+.scene-region--photo.scene-region--dispatch .scene-region__photo-hit,
+.scene-region--photo.scene-region--hub .scene-region__photo-hit {
+  fill: rgba(114, 231, 188, 0.08);
+  stroke: rgba(155, 242, 210, 0.36);
+}
+
+.scene-building-link {
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.scene-building-link__area {
+  fill: rgba(255, 203, 88, 0.2);
+  stroke: rgba(255, 231, 160, 0.9);
+  stroke-width: 2;
+  stroke-dasharray: 8 8;
+  filter: drop-shadow(0 0 10px rgba(255, 203, 88, 0.28));
+  transition: fill 180ms ease, stroke-width 180ms ease, filter 180ms ease;
+}
+
+.scene-building-link:hover .scene-building-link__area,
+.scene-building-link:focus .scene-building-link__area {
+  fill: rgba(255, 203, 88, 0.32);
+  stroke-width: 3;
+  filter: drop-shadow(0 0 16px rgba(255, 220, 120, 0.46));
+}
+
+.scene-building-link__label {
+  fill: #fff4c2;
+  font-size: 16px;
+  font-weight: 800;
+  text-anchor: middle;
+  paint-order: stroke;
+  stroke: rgba(4, 12, 22, 0.92);
+  stroke-width: 5px;
+  pointer-events: none;
 }
 
 .scene-frame--reference-exercise .scene-region__top {
@@ -2784,6 +3158,10 @@ button {
 
 .scene-frame.is-region-focused .scene-region.is-focused {
   transform: translateY(-6px);
+}
+
+.scene-frame.is-region-focused .scene-region--photo.is-focused {
+  transform: none;
 }
 
 .scene-point {
@@ -4462,6 +4840,13 @@ button {
     width: 100%;
     max-height: none;
     overflow: visible;
+    transform: none !important;
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .rail-collapse-toggle {
+    display: none;
   }
 
   .panel--terminal-stage {
