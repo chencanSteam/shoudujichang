@@ -1,4 +1,3 @@
-import { renderMapScene } from '../components/mapScene.js';
 import {
   buildBarChartOption,
   buildLineChartOption,
@@ -205,8 +204,28 @@ export function renderEmergencyPage({ data, route, state, navigate }) {
   return {
     html: `
       <section class="page page--emergency">
-        <div class="page-grid page-grid--three-column">
-          <aside class="panel-stack">
+        <div class="page-grid page-grid--three-column page-grid--emergency ${state.ui.emergencyLeftRailCollapsed ? 'is-left-rail-collapsed' : ''} ${state.ui.emergencyRightRailCollapsed ? 'is-right-rail-collapsed' : ''}">
+          <button
+            class="emergency-rail-toggle emergency-rail-toggle--left"
+            type="button"
+            data-toggle-emergency-rail="left"
+            aria-pressed="${state.ui.emergencyLeftRailCollapsed}"
+            aria-label="${state.ui.emergencyLeftRailCollapsed ? '展开左侧面板' : '收起左侧面板'}"
+            title="${state.ui.emergencyLeftRailCollapsed ? '展开左侧面板' : '收起左侧面板'}"
+          >
+            <span>${state.ui.emergencyLeftRailCollapsed ? '›' : '‹'}</span>
+          </button>
+          <button
+            class="emergency-rail-toggle emergency-rail-toggle--right"
+            type="button"
+            data-toggle-emergency-rail="right"
+            aria-pressed="${state.ui.emergencyRightRailCollapsed}"
+            aria-label="${state.ui.emergencyRightRailCollapsed ? '展开右侧面板' : '收起右侧面板'}"
+            title="${state.ui.emergencyRightRailCollapsed ? '展开右侧面板' : '收起右侧面板'}"
+          >
+            <span>${state.ui.emergencyRightRailCollapsed ? '‹' : '›'}</span>
+          </button>
+          <aside class="panel-stack emergency-rail emergency-rail--left">
             <section class="panel panel--hero reveal">
               <div class="panel-heading">
                 <span class="panel-kicker">场景模板</span>
@@ -303,18 +322,22 @@ export function renderEmergencyPage({ data, route, state, navigate }) {
                 <span style="width: ${((displayProgress + 1) / scenarioView.steps.length) * 100}%"></span>
               </div>
             </div>
-            <div class="js-emergency-map-scene">
-              ${renderMapScene({
-                mapAssets: data.mapAssets,
-                alerts: [sourceAlert],
-                videos: linkedVideos,
-                mode: 'emergency',
-                focusRegionId: scenario.regionId,
-                activeAlertId: sourceAlert.id,
-                emergencyScenario: scenarioView,
-                emergencyPlan: activePlan,
-                emergencyProgress: displayProgress,
-              })}
+            <div class="emergency-video-stage js-emergency-video-stage">
+              <video
+                class="emergency-video-stage__media"
+                src="/video/首都机场-应急视频.mp4"
+                aria-label="首都机场应急仿真演示视频"
+                autoplay
+                muted
+                loop
+                controls
+                playsinline
+                preload="metadata"
+              ></video>
+              <div class="emergency-video-stage__badge">
+                <span class="dot dot--warning"></span>
+                应急演示画面
+              </div>
             </div>
             <div class="map-caption">
               <div>
@@ -334,7 +357,7 @@ export function renderEmergencyPage({ data, route, state, navigate }) {
             </div>
           </section>
 
-          <aside class="panel-stack">
+          <aside class="panel-stack emergency-rail emergency-rail--right">
             <section class="panel reveal" style="animation-delay: 100ms;">
               <div class="panel-heading">
                 <span class="panel-kicker">结果指标</span>
@@ -435,26 +458,26 @@ function setupEmergencyPage({ container, data, state, scenario, sourceAlert, nav
   );
 
   let playTimer = null;
+  const emergencyVideo = container.querySelector('.emergency-video-stage__media');
+  const emergencyGrid = container.querySelector('.page-grid--emergency');
 
   const getProgress = () => Math.min(state.emergency.progress, scenarioView.steps.length - 1);
 
-  const renderMap = (progress) => {
-    const host = container.querySelector('.js-emergency-map-scene');
-    if (!host) {
+  const updateRailToggle = (side) => {
+    const collapsed =
+      side === 'left' ? state.ui.emergencyLeftRailCollapsed : state.ui.emergencyRightRailCollapsed;
+    const button = emergencyGrid?.querySelector(`[data-toggle-emergency-rail="${side}"]`);
+    if (!button) {
       return;
     }
 
-    host.innerHTML = renderMapScene({
-      mapAssets: data.mapAssets,
-      alerts: [sourceAlert],
-      videos: linkedVideos,
-      mode: 'emergency',
-      focusRegionId: scenario.regionId,
-      activeAlertId: sourceAlert.id,
-      emergencyScenario: scenarioView,
-      emergencyPlan: getNormalizedActivePlan(state, data, scenario),
-      emergencyProgress: progress,
-    });
+    const sideLabel = side === 'left' ? '左' : '右';
+    const actionLabel = collapsed ? `展开${sideLabel}侧面板` : `收起${sideLabel}侧面板`;
+    button.setAttribute('aria-pressed', String(collapsed));
+    button.setAttribute('aria-label', actionLabel);
+    button.setAttribute('title', actionLabel);
+    button.querySelector('span').textContent =
+      side === 'left' ? (collapsed ? '›' : '‹') : collapsed ? '‹' : '›';
   };
 
   const renderEditor = () => {
@@ -489,16 +512,18 @@ function setupEmergencyPage({ container, data, state, scenario, sourceAlert, nav
     container.querySelector('.js-stage-feed').innerHTML = renderStageFeedItems(scenarioView, progress);
     bindTimelineEvents();
 
-    renderMap(progress);
     updateChart(flowChart, createFlowOption(scenarioView, progress));
     updateChart(readinessChart, createReadinessOption(scenarioView, progress));
   };
 
-  const stopPlayback = () => {
+  const stopPlayback = ({ pauseVideo = true } = {}) => {
     state.emergency.playing = false;
     if (playTimer) {
       window.clearInterval(playTimer);
       playTimer = null;
+    }
+    if (pauseVideo) {
+      emergencyVideo?.pause();
     }
     syncPage();
   };
@@ -506,11 +531,12 @@ function setupEmergencyPage({ container, data, state, scenario, sourceAlert, nav
   const startPlayback = () => {
     stopPlayback();
     state.emergency.playing = true;
+    emergencyVideo?.play().catch(() => {});
     syncPage();
 
     playTimer = window.setInterval(() => {
       if (state.emergency.progress >= scenarioView.steps.length - 1) {
-        stopPlayback();
+        stopPlayback({ pauseVideo: false });
         return;
       }
 
@@ -797,10 +823,31 @@ function setupEmergencyPage({ container, data, state, scenario, sourceAlert, nav
 
   container.querySelector('[data-play-emergency]')?.addEventListener('click', startPlayback);
   container.querySelector('[data-pause-emergency]')?.addEventListener('click', stopPlayback);
+  emergencyGrid?.querySelectorAll('[data-toggle-emergency-rail]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const side = button.dataset.toggleEmergencyRail;
+      if (side === 'left') {
+        state.ui.emergencyLeftRailCollapsed = !state.ui.emergencyLeftRailCollapsed;
+        emergencyGrid.classList.toggle('is-left-rail-collapsed', state.ui.emergencyLeftRailCollapsed);
+      }
+      if (side === 'right') {
+        state.ui.emergencyRightRailCollapsed = !state.ui.emergencyRightRailCollapsed;
+        emergencyGrid.classList.toggle('is-right-rail-collapsed', state.ui.emergencyRightRailCollapsed);
+      }
+      updateRailToggle(side);
+      window.setTimeout(() => {
+        flowChart?.resize();
+        readinessChart?.resize();
+      }, 280);
+    });
+  });
   container.querySelector('[data-reset-emergency]')?.addEventListener('click', () => {
     stopPlayback();
     state.emergency.progress = 0;
-    syncPage();
+    if (emergencyVideo) {
+      emergencyVideo.currentTime = 0;
+    }
+    startPlayback();
   });
   container.querySelector('[data-back-overview]')?.addEventListener('click', () => {
     navigate('overview', {
@@ -814,6 +861,8 @@ function setupEmergencyPage({ container, data, state, scenario, sourceAlert, nav
   bindEditorEvents();
   if (state.emergency.playing) {
     startPlayback();
+  } else {
+    emergencyVideo?.play().catch(() => {});
   }
 
   return () => stopPlayback();

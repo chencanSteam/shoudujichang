@@ -880,6 +880,87 @@ button {
   grid-template-columns: 330px minmax(0, 1fr) 330px;
 }
 
+.page-grid--emergency {
+  position: relative;
+  transition: grid-template-columns 280ms ease;
+}
+
+.page-grid--emergency.is-left-rail-collapsed {
+  grid-template-columns: 0 minmax(0, 1fr) 330px;
+}
+
+.page-grid--emergency.is-right-rail-collapsed {
+  grid-template-columns: 330px minmax(0, 1fr) 0;
+}
+
+.page-grid--emergency.is-left-rail-collapsed.is-right-rail-collapsed {
+  grid-template-columns: 0 minmax(0, 1fr) 0;
+}
+
+.page-grid--emergency .emergency-rail {
+  min-width: 0;
+  overflow: hidden;
+  opacity: 1;
+  transition: opacity 180ms ease, transform 280ms ease;
+}
+
+.page-grid--emergency.is-left-rail-collapsed .emergency-rail--left {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-24px);
+}
+
+.page-grid--emergency.is-right-rail-collapsed .emergency-rail--right {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(24px);
+}
+
+.emergency-rail-toggle {
+  position: absolute;
+  top: 300px;
+  z-index: 8;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 70px;
+  border: 1px solid rgba(124, 201, 255, 0.24);
+  background: rgba(5, 17, 34, 0.88);
+  color: #e8fbff;
+  cursor: pointer;
+  transition: left 280ms ease, right 280ms ease, border-color 180ms ease, background 180ms ease;
+  backdrop-filter: blur(14px);
+}
+
+.emergency-rail-toggle:hover {
+  border-color: rgba(135, 231, 255, 0.52);
+  background: rgba(17, 51, 86, 0.94);
+}
+
+.emergency-rail-toggle span {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.emergency-rail-toggle--left {
+  left: 322px;
+  border-radius: 0 999px 999px 0;
+}
+
+.emergency-rail-toggle--right {
+  right: 322px;
+  border-radius: 999px 0 0 999px;
+}
+
+.page-grid--emergency.is-left-rail-collapsed .emergency-rail-toggle--left {
+  left: -8px;
+}
+
+.page-grid--emergency.is-right-rail-collapsed .emergency-rail-toggle--right {
+  right: -8px;
+}
+
 .traffic-shell {
   display: grid;
   gap: 16px;
@@ -970,6 +1051,43 @@ button {
   display: flex;
   flex-direction: column;
   min-height: 0;
+}
+
+.emergency-video-stage {
+  position: relative;
+  flex: 1;
+  min-height: 460px;
+  overflow: hidden;
+  border: 1px solid rgba(124, 201, 255, 0.16);
+  border-radius: 28px;
+  background: #020812;
+  box-shadow: inset 0 0 48px rgba(1, 8, 18, 0.42);
+}
+
+.emergency-video-stage__media {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 460px;
+  object-fit: cover;
+  background: #020812;
+}
+
+.emergency-video-stage__badge {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 1px solid rgba(244, 178, 89, 0.28);
+  border-radius: 999px;
+  background: rgba(3, 12, 25, 0.78);
+  color: #f7fbff;
+  font-size: 0.8rem;
+  pointer-events: none;
+  backdrop-filter: blur(12px);
 }
 
 .panel--terminal-stage {
@@ -4623,6 +4741,30 @@ button {
     grid-template-rows: auto;
   }
 
+  .page-grid--emergency {
+    grid-template-columns: 280px minmax(0, 1fr) 280px;
+  }
+
+  .page-grid--emergency.is-left-rail-collapsed {
+    grid-template-columns: 0 minmax(0, 1fr) 280px;
+  }
+
+  .page-grid--emergency.is-right-rail-collapsed {
+    grid-template-columns: 280px minmax(0, 1fr) 0;
+  }
+
+  .page-grid--emergency.is-left-rail-collapsed.is-right-rail-collapsed {
+    grid-template-columns: 0 minmax(0, 1fr) 0;
+  }
+
+  .emergency-rail-toggle--left {
+    left: 272px;
+  }
+
+  .emergency-rail-toggle--right {
+    right: 272px;
+  }
+
   .traffic-shell,
   .traffic-shell--realtime,
   .traffic-shell--model {
@@ -4644,6 +4786,11 @@ button {
   }
 
   .scene-frame {
+    min-height: 420px;
+  }
+
+  .emergency-video-stage,
+  .emergency-video-stage__media {
     min-height: 420px;
   }
 
@@ -4807,6 +4954,24 @@ button {
 @media (max-width: 960px) {
   .page {
     padding: 14px;
+  }
+
+  .page-grid--emergency,
+  .page-grid--emergency.is-left-rail-collapsed,
+  .page-grid--emergency.is-right-rail-collapsed,
+  .page-grid--emergency.is-left-rail-collapsed.is-right-rail-collapsed {
+    grid-template-columns: 1fr;
+  }
+
+  .page-grid--emergency .emergency-rail {
+    opacity: 1;
+    overflow: visible;
+    pointer-events: auto;
+    transform: none;
+  }
+
+  .emergency-rail-toggle {
+    display: none;
   }
 
   .app-shell.is-terminal-model .page-stage,
