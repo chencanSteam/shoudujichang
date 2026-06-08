@@ -771,8 +771,8 @@ button {
   border-radius: 18px;
   border-color: rgba(150, 222, 255, 0.18);
   background:
-    linear-gradient(180deg, rgba(5, 15, 31, 0.74), rgba(4, 13, 27, 0.58)),
-    radial-gradient(circle at top right, rgba(82, 212, 255, 0.1), transparent 44%);
+    linear-gradient(180deg, rgba(5, 15, 31, 0.96), rgba(4, 13, 27, 0.92)),
+    radial-gradient(circle at top right, rgba(82, 212, 255, 0.05), transparent 44%);
   box-shadow: 0 20px 46px rgba(0, 0, 0, 0.32), inset 0 1px 0 rgba(216, 248, 255, 0.08);
   backdrop-filter: blur(18px);
 }

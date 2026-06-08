@@ -616,21 +616,12 @@ function renderVehicleIcon(tone, scale = 1) {
   const icons = {
     bus: `
       <g class="scene-vehicle-icon scene-vehicle-icon--bus" transform="scale(${scale})">
-        <rect class="scene-vehicle-icon__body" x="-13" y="-7" width="26" height="14" rx="4"></rect>
-        <rect class="scene-vehicle-icon__window" x="-9" y="-5" width="6" height="4" rx="1"></rect>
-        <rect class="scene-vehicle-icon__window" x="-1" y="-5" width="6" height="4" rx="1"></rect>
-        <rect class="scene-vehicle-icon__window" x="7" y="-5" width="4" height="4" rx="1"></rect>
-        <circle class="scene-vehicle-icon__wheel" cx="-7" cy="7" r="2"></circle>
-        <circle class="scene-vehicle-icon__wheel" cx="8" cy="7" r="2"></circle>
+        <image class="scene-vehicle-icon__image" href="/image/巴士.png" x="-18" y="-18" width="36" height="36"></image>
       </g>
     `,
     taxi: `
       <g class="scene-vehicle-icon scene-vehicle-icon--taxi" transform="scale(${scale})">
-        <path class="scene-vehicle-icon__body" d="M -12 4 L -9 -4 L -4 -8 H 5 L 10 -4 L 13 4 Z"></path>
-        <rect class="scene-vehicle-icon__sign" x="-4" y="-12" width="8" height="3" rx="1"></rect>
-        <path class="scene-vehicle-icon__window" d="M -6 -4 L -3 -7 H 4 L 7 -4 Z"></path>
-        <circle class="scene-vehicle-icon__wheel" cx="-7" cy="5" r="2"></circle>
-        <circle class="scene-vehicle-icon__wheel" cx="8" cy="5" r="2"></circle>
+        <image class="scene-vehicle-icon__image" href="/image/出租车.png" x="-17" y="-17" width="34" height="34"></image>
       </g>
     `,
     ride: `
@@ -644,10 +635,7 @@ function renderVehicleIcon(tone, scale = 1) {
     `,
     private: `
       <g class="scene-vehicle-icon scene-vehicle-icon--private" transform="scale(${scale})">
-        <path class="scene-vehicle-icon__body" d="M -13 4 L -10 -3 L -4 -7 H 5 L 11 -2 L 13 4 Z"></path>
-        <path class="scene-vehicle-icon__window" d="M -6 -3 L -3 -6 H 4 L 8 -3 Z"></path>
-        <circle class="scene-vehicle-icon__wheel" cx="-7" cy="5" r="2"></circle>
-        <circle class="scene-vehicle-icon__wheel" cx="8" cy="5" r="2"></circle>
+        <image class="scene-vehicle-icon__image" href="/image/私家车.png" x="-17" y="-17" width="34" height="34"></image>
       </g>
     `,
     patrol: `
@@ -675,10 +663,7 @@ function renderVehicleIcon(tone, scale = 1) {
 function renderPersonnelIcon() {
   return `
     <g class="scene-person-icon">
-      <circle class="scene-person-icon__head" cx="0" cy="-7" r="3.4"></circle>
-      <path class="scene-person-icon__body" d="M -5 4 C -4 -1 -2 -3 0 -3 C 2 -3 4 -1 5 4 L 3 8 H -3 Z"></path>
-      <path class="scene-person-icon__leg" d="M -2 7 L -5 12 M 2 7 L 5 12"></path>
-      <path class="scene-person-icon__arm" d="M -4 1 L -8 5 M 4 1 L 8 5"></path>
+      <image class="scene-person-icon__image" href="/image/巡检人员.png" x="-11" y="-11" width="22" height="22"></image>
     </g>
   `;
 }
