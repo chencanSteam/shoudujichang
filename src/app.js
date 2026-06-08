@@ -152,6 +152,8 @@ function createState(data) {
       },
       overviewLeftRailCollapsed: false,
       overviewRightRailCollapsed: false,
+      emergencyLeftRailCollapsed: false,
+      emergencyRightRailCollapsed: false,
       waitingHallIndoorOpen: false,
     },
     demo: {

@@ -27,3 +27,8 @@ dist-ssr
 .vercel-global/
 .npm-cache/
 *.png
+!public/image/
+!public/image/巴士.png
+!public/image/出租车.png
+!public/image/私家车.png
+!public/image/巡检人员.png
